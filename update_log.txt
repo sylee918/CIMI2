@@ -1,0 +1,58 @@
+Update/modification/debug log listed here
+-----
+Mar 20 2025
+Debug:
+ModIonDiff.f90 bug is fixed.
+
+Update:
+Makefile and src/Makefile are updated and now "make sat" to create satellite files
+
+----
+Apr 7 2025
+Debug:
+Small weaving of Potential along MLT are fixed by M.-C. Fok
+
+Modification:
+From now on, cimi.dat has an option to choose output .rpt 
+
+----
+Apr 15 2025
+Debug:
+errors in EMIC wave diffusion were fixed and confirmed the results were fine.
+
+----
+Apr 17 2025
+Update:
+plasmasphere.f90 is updated by M.-C. Fok
+cimi.f90 and cimi.dat are updated and have options to choose WP+RC or RC+RB.
+
+----
+May 07 2025
+Update:
+cimi.f90 plasmasphere.f90 are updated by M.-C. Fok
+longitudinal grid spacing is calculated based on equi-magnetic flux.
+
+----
+July 21 2025
+Update:
+cimi.f90 sat_flux.f90 inputs/ tools are updated by M.-C. Fok
+Diagonalized diffusion is implemented.
+Output file, .fls, includes headers showing the variable information.
+
+----
+August 24 2025
+Update:
+cimi.f90 by M.-C. Fok
+Atmospheric backscatter (multiple backscatters from the atmosphere) is included.
+
+----
+September 19 2025
+Update:
+cimi.f90 ModTwinsHden.f90 by G. Cucho-Padin
+TWINS neutral hydrogen density is included (igeo=3).
+
+----
+October 22 2025
+Update:
+D_LBchorus_BU***.dat and D_hiss_BU.dat are updated.
+constant Q2 curves are computed from the 90 deg and DQQ is updated accordingly.
