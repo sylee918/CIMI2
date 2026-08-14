@@ -1,1 +1,0 @@
-../inputs/GSC_ABV.txt
