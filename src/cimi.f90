@@ -5045,9 +5045,9 @@
       integer iba(ip),js(ns)
       integer n,j,i,m,k
 
-!$omp parallel do default(shared) private(n,j,i,m,k)
       do n=1,ijs
          if (js(n).le.4) then        ! ion only
+!$omp parallel do default(shared) private(j,i,m,k)
             do j=1,ip
             do i=1,iba(j)
             do m=1,ik
@@ -5057,9 +5057,9 @@
             enddo
             enddo    
             enddo    
+!$omp end parallel do
          endif
       enddo    
-!$omp end parallel do
 
       end subroutine charexchange
 
@@ -5078,10 +5078,10 @@
   real f2(ns,ir,ip,iw,ik),coulie(ns,0:iw),fww(0:iw+1),cww(0:iw)
   real faw(0:iw),density(ir,ip),dtw
 
-!$omp parallel do default(shared) private(n,dtW,j,i,m,fww,cww,faw,k)
   do n=1,ijs
      if (js(n).le.4) then     ! ring current ion only
         dtW=dt/dlnp(n)
+!$omp parallel do default(shared) private(j,i,m,fww,cww,faw,k)
         do j=1,ip
            do i=1,iba(j)
               do m=1,ik
@@ -5104,9 +5104,9 @@
               enddo
            enddo
         enddo
+!$omp end parallel do
      endif     ! end of if (js(n).le.4)
   enddo
-!$omp end parallel do
 
   end subroutine Coulomb
 
@@ -5442,12 +5442,12 @@ end subroutine diffuse_VLF
   real Dsum,wDaa(0:ik+1),rbo,DDm,DDp,y_2,kak,dKda,dtV2
   real DVV(0:ik+1),DD(0:ik+1),um(ik),up(ik),a1d(ik),b1d(ik),c1d(ik)
 
-!$omp parallel do default(shared) &
-!$omp private(n, dtV2, j, i, rbo, k, wDaa, Dsum, m, y_2, cosa, dKda, &
-!$omp         kak, DVV, Gjac, f1d, DD, DDm, DDp, um, up, a1d, b1d, &
-!$omp         c1d, f0, fr, fnew)
   do n=1,ijs
      dtV2=dt/dlnK/dlnK
+!$omp parallel do default(shared) &
+!$omp private(j, i, rbo, k, wDaa, Dsum, m, y_2, cosa, dKda, &
+!$omp         kak, DVV, Gjac, f1d, DD, DDm, DDp, um, up, a1d, b1d, &
+!$omp         c1d, f0, fr, fnew)
      do j=1,ip
         do i=1,iba(j)
            rbo=ro(i,j)*re_m*sqrt(bo(i,j))
@@ -5506,8 +5506,8 @@ end subroutine diffuse_VLF
            enddo     ! end of kloop
         enddo        ! end of iloop
      enddo           ! end of jloop
-  enddo              ! end of nloop
 !$omp end parallel do
+  enddo              ! end of nloop
 
 end subroutine diffuse_flc
 
@@ -7351,9 +7351,9 @@ end subroutine hodges_Ylm
   xmer3=xme/(rc*re_m)**3
 
   SDtime(:,:,:,:)=0.
-!$omp parallel do default(shared) private(n,j,i,sinlat2,Bi,vBe,k,m,SDtime1)
   do n=1,ijs
      if (js(n).eq.6) then        ! sub-keV electrons
+!$omp parallel do default(shared) private(j,i,sinlat2,Bi,vBe,k,m,SDtime1)
         do j=1,ip
            do i=1,iba(j)
               sinlat2=sin(xlati(i,j))*sin(xlati(i,j))
@@ -7367,9 +7367,9 @@ end subroutine hodges_Ylm
               enddo
            enddo
         enddo
+!$omp end parallel do
      endif
   enddo
-!$omp end parallel do
 
   end subroutine StDiTime
 
@@ -7386,9 +7386,9 @@ end subroutine hodges_Ylm
   integer ijs,iba(ip),js(ns),i,j,k,m,n
   real f2(ns,ir,ip,iw,ik)
 
-!$omp parallel do default(shared) private(n,j,i,m,k)
       do n=1,ijs
          if (js(n).eq.6) then        ! low-energy electrons only
+!$omp parallel do default(shared) private(j,i,m,k)
             do j=1,ip
             do i=1,iba(j)
             do m=1,ik
@@ -7398,9 +7398,9 @@ end subroutine hodges_Ylm
             enddo
             enddo
             enddo
+!$omp end parallel do
          endif
       enddo
-!$omp end parallel do
 
   end subroutine StrongDiff
 
