@@ -304,7 +304,7 @@
 !  This subroutine solves diffusion in velocity space 
 !   in (U,V)=(lnp,lnK) coordinates.
 !****************************************************************************
-  subroutine diffuse_UV_ions(n,i,j,Gjac0,t,ro1,bo1,y0,tya0,rppa1,ompe1,f2)
+  recursive subroutine diffuse_UV_ions(n,i,j,Gjac0,t,ro1,bo1,y0,tya0,rppa1,ompe1,f2)
 
   integer,intent(in) :: n,i,j  
   real,   intent(in) :: t,ro1,bo1,rppa1,ompe1
@@ -322,8 +322,9 @@
   real :: bwH,bwHe,bwO
   real rbo,ao,DDm,DDp,y_2,kak,dKda,dtU2,dtV2
   real Daa,Dap,Dpp,DUU(0:iw+1,0:ik+1),DVV(0:iw+1,0:ik+1),DUV(0:iw+1,0:ik+1)
-  real,allocatable,dimension(:,:) :: wDaa,wDap,wDpp
-  real,allocatable,dimension(:) :: wPA,DD,um,up,a1d,b1d,c1d,f0,fr,fnew
+  real :: wDaa(0:iw+1,iePA),wDap(0:iw+1,iePA),wDpp(0:iw+1,iePA)
+  real :: wPA(iePA),DD(0:max(iw,ik)+1),um(max(iw,ik)),up(max(iw,ik))
+  real :: a1d(max(iw,ik)),b1d(max(iw,ik)),c1d(max(iw,ik)),f0(0:max(iw,ik)+1),fr(max(iw,ik)),fnew(max(iw,ik))
 
   real :: iDaa=1,&
           iDpp=1
@@ -331,11 +332,7 @@
  ! xlam=0.5              ! implicitness in solving diffusion equation
  ! alam=1.-xlam          ! xlam=1: fully implicit; xlam=0.5: Crank-Nicolson
  mpa=iePA
- if (.not.allocated(wPA)) allocate (wPA(mpa))
- if (.not.allocated(wDaa)) allocate (wDaa(0:iw+1,mpa))
- if (.not.allocated(wDap)) allocate (wDap(0:iw+1,mpa))
- if (.not.allocated(wDpp)) allocate (wDpp(0:iw+1,mpa))
- wPA(:)=ePA(:)
+ wPA(1:mpa)=ePA(1:mpa)
 
  ! Gjac,y1,tya1
  Gjac(0:iw+1,0:ik+1)=Gjac0(1:iw+2,1:ik+2)
@@ -473,8 +470,6 @@
 
     ! do diffusion in U(lnp)
     if (iDpp.eq.1) then
-       allocate (a1d(iw),b1d(iw),c1d(iw),fr(iw),fnew(iw),f0(0:iw+1), &
-                 DD(0:iw+1),um(iw),up(iw))
        do m=1,ik
           do k=0,iw+1
              DD(k)=Gjac(k,m)*DUU(k,m)
@@ -500,13 +495,10 @@
           call tridiagonal(a1d,b1d,c1d,fr,iw,fnew)
           f2d(:,m)=fnew(:)
        enddo
-       deallocate (DD,um,up,a1d,b1d,c1d,f0,fr,fnew)
     endif   ! end of if (iDpp.eq.1)
 
     ! do diffusion in V(lnK)
     if (iDaa.eq.1) then
-       allocate (a1d(ik),b1d(ik),c1d(ik),fr(ik),fnew(ik),f0(0:ik+1), &
-                 DD(0:ik+1),um(ik),up(ik))
        do k=1,iw
           do m=0,ik+1
              DD(m)=Gjac(k,m)*DVV(k,m)
@@ -531,7 +523,6 @@
           call tridiagonal(a1d,b1d,c1d,fr,ik,fnew)
           f2d(k,:)=fnew(:)
        enddo
-       deallocate (DD,um,up,a1d,b1d,c1d,f0,fr,fnew)
     endif    ! end of if (iDaa.eq.1)
 
     ! Update f2
@@ -557,7 +548,7 @@ end subroutine diffuse_UV_ions
 !
 ! L = 3.5 - 7, every 0.5
 !*****************************************************************************
-  subroutine EmicPower(t,ro1,BwH,BwHe,BwO)
+  recursive subroutine EmicPower(t,ro1,BwH,BwHe,BwO)
 
   real,intent(in) :: t,ro1
   real,intent(out) :: BwH,BwHe,BwO   ! wave amplitude in nT
@@ -596,7 +587,7 @@ end subroutine diffuse_UV_ions
 !  Inputs : b1,b2,b3,b4,n
 !  Outputs : f
 ! ************************************************************************
-     subroutine tridiagonal(b1,b2,b3,b4,n,f)
+     recursive subroutine tridiagonal(b1,b2,b3,b4,n,f)
      implicit none
 
      integer,intent(in) :: n
@@ -621,7 +612,7 @@ end subroutine diffuse_UV_ions
      end subroutine tridiagonal
 
 !-----------------------------------------------------------------------
-      subroutine lintp(xx,yy,n,x,y)
+      recursive subroutine lintp(xx,yy,n,x,y)
 
 !  This subroutine is copied from cimi.f90
 !-----------------------------------------------------------------------
@@ -693,7 +684,7 @@ end subroutine diffuse_UV_ions
 
 
 !--------------------------------------------------------------------------
-      subroutine locate1(xx,n,x,j)
+      recursive subroutine locate1(xx,n,x,j)
 
 !  This subroutine is copied from cimi.f90
 !--------------------------------------------------------------------------

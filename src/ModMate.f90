@@ -26,10 +26,6 @@ module ModMate
  !real,allocatable :: HdenMate(:,:,:,:)  ! Mate exospheric H density (time,x,y,z)
  real,allocatable :: logHdenMate(:,:,:,:)  ! Mate exospheric log H density (time,x,y,z)
 
- real :: lastTime = -999999.0
- integer :: cached_iTime = 1
- real :: cached_wt1 = 1.0, cached_wt2 = 0.0
-
 contains
 !--------------------------------------------------------------------------
  subroutine read_mate_data
@@ -102,7 +98,7 @@ contains
 
 
 !--------------------------------------------------------------------------
- subroutine mate_geocorona(t,xsm,ysm,zsm,hden)
+  recursive subroutine mate_geocorona(t,xsm,ysm,zsm,hden)
 !--------------------------------------------------------------------------
   real,intent(in) :: t,&         ! time in sec
                      xsm,ysm,zsm ! in RE
@@ -112,6 +108,8 @@ contains
   real :: Rgse,Latgse,Longse,Thetagse,LonGseRad
   real :: logHden1,logHden2,logHden  ! Hden at TimeMate(iTime) and TimeMate(iTime+1)
   real :: cRadToDeg=57.2957795131
+  integer :: iTime
+  real :: wt1,wt2
 
   external SPHCAR_08,gswgse_08,smgsw_08  ! geopack_2008 subroutine
 
@@ -124,25 +122,21 @@ contains
   LatGSE=90.-ThetaGse*cRadToDeg
   LonGSE=LonGseRad*cRadToDeg
 
-  ! Cache time interpolation index and weights if t has not changed
-  if (t .ne. lastTime) then
-     lastTime = t
-     call locate_fast(TimeMate,nHourMate,t,cached_iTime)
-     if (cached_iTime < nHourMate) then
-        cached_wt2 = (t - TimeMate(cached_iTime)) / (TimeMate(cached_iTime+1) - TimeMate(cached_iTime))
-        cached_wt1 = 1.0 - cached_wt2
-     else
-        cached_wt1 = 1.0
-        cached_wt2 = 0.0
-     endif
+  call locate_fast(TimeMate,nHourMate,t,iTime)
+  if (iTime < nHourMate) then
+     wt2 = (t - TimeMate(iTime)) / (TimeMate(iTime+1) - TimeMate(iTime))
+     wt1 = 1.0 - wt2
+  else
+     wt1 = 1.0
+     wt2 = 0.0
   endif
 
-  call lintp3(RMateGSE,LatMateGSE,LonMateGSE,logHdenMate(cached_iTime,:,:,:),&
+  call lintp3(RMateGSE,LatMateGSE,LonMateGSE,logHdenMate(iTime,:,:,:),&
               nRMate,nLatMate,nLonMate, Rgse,LatGSE,LonGSE,logHden1)
-  if (cached_wt2 > 0.0) then
-     call lintp3(RMateGSE,LatMateGSE,LonMateGSE,logHdenMate(cached_iTime+1,:,:,:),&
+  if (wt2 > 0.0) then
+     call lintp3(RMateGSE,LatMateGSE,LonMateGSE,logHdenMate(iTime+1,:,:,:),&
                  nRMate,nLatMate,nLonMate, Rgse,LatGSE,LonGSE,logHden2)
-     logHden = cached_wt1 * logHden1 + cached_wt2 * logHden2
+     logHden = wt1 * logHden1 + wt2 * logHden2
   else
      logHden = logHden1
   endif
@@ -151,7 +145,7 @@ contains
   end subroutine mate_geocorona
 
 !-------------------------------------------------------------------------------
-  subroutine lintp3(x,y,z,v,nx,ny,nz,x1,y1,z1,v1)
+  recursive subroutine lintp3(x,y,z,v,nx,ny,nz,x1,y1,z1,v1)
 !-------------------------------------------------------------------------------
 !  Optimized 3D Trilinear Interpolation
 !
@@ -192,7 +186,7 @@ contains
  
  
 !-------------------------------------------------------------------------------
-        subroutine lintp4(t,x,y,z,v,nt,nx,ny,nz,t1,x1,y1,z1,v1)
+        recursive subroutine lintp4(t,x,y,z,v,nt,nx,ny,nz,t1,x1,y1,z1,v1)
 !-------------------------------------------------------------------------------
 !  Routine does 2-D interpolation.  x and y must be increasing or decreasing
 !  monotonically
@@ -299,7 +293,7 @@ contains
         end subroutine lintp4
 
 !--------------------------------------------------------------------------
-  subroutine locate_fast(xx,n,x,j)
+  recursive subroutine locate_fast(xx,n,x,j)
 !--------------------------------------------------------------------------
 ! Fast binary search without redundant O(N) monotonicity checks
   implicit none
@@ -331,7 +325,7 @@ contains
   end subroutine locate_fast
 
 !--------------------------------------------------------------------------
-      subroutine locate1(xx,n,x,j)
+      recursive subroutine locate1(xx,n,x,j)
 !--------------------------------------------------------------------------
 !  This subroutine is copied from cimi.f90
 

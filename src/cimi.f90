@@ -565,6 +565,7 @@
      if (initPL.eq.1.and.iEmicDiff.eq.1) then
         do n=1,ijs
            if (js(n).le.4) then       ! ions only
+!$omp parallel do default(shared) private(j,i) schedule(dynamic)
               do j=1,ip
                  do i=1,iba(j)
                     call diffuse_UV_ions(n,i,j,xjac(n,i,j,:,:),t,ro(i,j), &
@@ -572,6 +573,7 @@
                                          ompe(i,j),f2(n,i,j,:,:))
                  enddo
               enddo
+!$omp end parallel do
            endif
         enddo
      endif
@@ -596,6 +598,7 @@
      if (initPL.eq.1.and.iEmicDiff.eq.1) then
         do n=1,ijs
            if (js(n).le.4) then       ! ions only
+!$omp parallel do default(shared) private(j,i) schedule(dynamic)
               do j=1,ip
                  do i=1,iba(j)
                     call diffuse_UV_ions(n,i,j,xjac(n,i,j,:,:),t,ro(i,j), &
@@ -603,6 +606,7 @@
                                          ompe(i,j),f2(n,i,j,:,:))
                  enddo
               enddo
+!$omp end parallel do
            endif
         enddo
      endif
@@ -4763,18 +4767,24 @@
   use cgrid
   use cfield
   use cVdrift
-  use cInterFlux
   use cbound,only: fb
-  integer ib0(ip)
-  real f2(ns,ir,ip,iw,ik),clp(ir,ip), &
-       f0(ir,ip),ekev1,gride1(0:je),f20(ir,ip),eout(ns,2,3,je+1)
+  implicit none
+  integer ijs,ib0(ip)
+  real f2(ns,ir,ip,iw,ik),eout(ns,2,3,je+1),t,dt
+  real clp(ir,ip),f0(ir,ip),ekev1,gride1(0:je),f20(ir,ip)
+  real cl(0:ir,ip),cp(ir,ip),faL(0:ir,ip),fap(ir,ip),fupL(0:ir,ip),fupp(ir,ip)
+  real fbL0(ip),fbL1(ip),cmax,dt1L,dt1p,dPart,dEner,dtL,dtp
+  integer n,k,m,i,j,j1,j_1,i1,ib,ibo,nrun,nn,ii,kk
 
   dtL=dt/dvarL
   dtp=dt/dphi 
-  cl(0,:)=0.             ! assume no particle flows across lower L boundary
 
   do n=1,ijs
   gride1(0:je)=ebound(n,0:je)
+!$omp parallel do default(shared) schedule(dynamic) collapse(2) &
+!$omp private(k,m,f20,clp,j,j1,i,i1,cmax,nrun,dt1L,dt1p,ib,ibo,fbL0,fbL1, &
+!$omp         cl,cp,nn,faL,fap,fupL,fupp,f0,j_1,ii,ekev1,dPart,dEner,kk) &
+!$omp reduction(+:eout)
   do k=1,iw
   do m=1,ik
      f20(1:ir,1:ip)=f2(n,1:ir,1:ip,k,m)         ! initial f2
@@ -4797,6 +4807,7 @@
      dt1p=dtp/nrun
 
      ! Setup boundary fluxes and Courant numbers
+     cl(0,:)=0.
      do j=1,ip
         ! boundary conditions
         ib=iba(j)
@@ -4813,8 +4824,8 @@
 
      ! run drift nrun times
      do nn=1,nrun
-        if (nrun.lt.5) call FLS_2O_2D(iba,f20)
-        if (nrun.ge.5) call FLS_HO_2D(iba,f20)
+        if (nrun.lt.5) call FLS_2O_2D(iba,f20,fbL0,fbL1,cl,cp,faL,fap,fupL,fupp)
+        if (nrun.ge.5) call FLS_HO_2D(iba,f20,fbL0,fbL1,cl,cp,faL,fap,fupL,fupp)
         f0=f20
         do j=1,ip
            j_1=j-1
@@ -4874,6 +4885,7 @@
 
   enddo            ! end of m loop
   enddo            ! end of k loop
+!$omp end parallel do
   enddo            ! end of n loop
 
 ! Update ib0
@@ -4890,24 +4902,31 @@
   use cgrid
   use cfield
   use cVdrift
-  use cInterFlux
   use cbound,only: fb
   use cread2,only: js
-  real eout(ns,2,3,je+1),faLk(0:ir,ip,iw),fapk(ir,ip,iw),f20(ir,ip), &
-       fww(0:iw+1),cww(0:iw), &
-       f2(ns,ir,ip,iw,ik),clp(ir,ip),fawk(ir,ip,0:iw), &
+  implicit none
+  integer ijs,ib0(ip)
+  real t,dt,f2(ns,ir,ip,iw,ik),eout(ns,2,3,je+1)
+  real faLk(0:ir,ip,iw),fapk(ir,ip,iw),f20(ir,ip), &
+       fww(0:iw+1),cww(0:iw),clp(ir,ip),fawk(ir,ip,0:iw), &
        f0(ir,ip,iw),ekev1,gride1(0:je),f2k(ir,ip,iw), &
-       fbL1k(ip,iw),fupLk(0:ir,ip,iw),fuppk(ir,ip,iw),cw(ir,ip),faw(0:iw)
-  integer ib0(ip)
+       fbL1k(ip,iw),fupLk(0:ir,ip,iw),fuppk(ir,ip,iw),cw(ir,ip),faw(0:iw), &
+       fbL0(ip),fbL1(ip),cl(0:ir,ip),cp(ir,ip),faL(0:ir,ip),fap(ir,ip),fupL(0:ir,ip),fupp(ir,ip)
+  real cmax,dt1L,dt1p,dt1W,dPart,dEner,dtL,dtp,dtW,pp3
+  integer n,m,i,j,j1,j_1,i1,ib,ibo,nrun,nn,k,kk,ii
 
   dtL=dt/dvarL
   dtp=dt/dphi 
-  cl(0,:)=0.             ! assume no particle flows across lower L boundary
 
   do n=1,ijs
   gride1(0:je)=ebound(n,0:je)
   dtW=dt/dlnp(n)
   pp3=(gridp(n,1)/gridp(n,0))**3
+!$omp parallel do default(shared) schedule(dynamic) &
+!$omp private(m,f2k,clp,i,i1,j,j1,cmax,nrun,dt1L,dt1p,dt1W,ib,ibo,fbL0,fbL1k, &
+!$omp         cw,cl,cp,nn,k,fbL1,f20,faLk,fapk,fupLk,fuppk,faL,fap,fupL,fupp, &
+!$omp         cww,fww,faw,fawk,f0,j_1,ii,ekev1,dPart,dEner,kk) &
+!$omp reduction(+:eout)
   do m=1,ik
      f2k(1:ir,1:ip,1:iw)=f2(n,1:ir,1:ip,1:iw,m)         ! initial f2
 
@@ -4930,6 +4949,7 @@
      dt1W=dtW/nrun    
 
      ! Setup boundary fluxes in L and Courant numbers
+     cl(0,:)=0.             ! assume no particle flows across lower L boundary
      do j=1,ip
         ! boundary conditions
         ib=iba(j)
@@ -4952,7 +4972,7 @@
         do k=1,iw
            fbL1(:)=fbL1k(:,k)
            f20(:,:)=f2k(:,:,k)
-           call FLS_2O_2D(iba,f20)
+           call FLS_2O_2D(iba,f20,fbL0,fbL1,cl,cp,faL,fap,fupL,fupp)
            faLk(:,:,k)=faL(:,:)
            fapk(:,:,k)=fap(:,:)
            fupLk(:,:,k)=fupL(:,:)
@@ -5034,6 +5054,7 @@
      f2(n,1:ir,1:ip,1:iw,m)=f2k(1:ir,1:ip,1:iw)
 
   enddo            ! end of m loop
+!$omp end parallel do
   enddo            ! end of n loop
 
 ! Update ib0
@@ -5527,13 +5548,17 @@ end subroutine diffuse_flc
 
 
 !*******************************************************************************
-   subroutine FLS_2O_2D(iba,f20)
+   recursive subroutine FLS_2O_2D(iba,f20,fbL0,fbL1,cl,cp,faL,fap,fupL,fupp)
 !  Routine calculates the inter-flux for advection in L and phi. 2nd order
 !  scheme is used.
 !*******************************************************************************
-      use cInterFlux
-      integer iba(ip)
-      real f20(ir,ip),fwbc(0:ir+1,ip)
+      use cimigrid_dim, only: ir,ip
+      implicit none
+      integer,intent(in) :: iba(ip)
+      real,intent(in) :: f20(ir,ip),fbL0(ip),fbL1(ip),cl(0:ir,ip),cp(ir,ip)
+      real,intent(out) :: faL(0:ir,ip),fap(ir,ip),fupL(0:ir,ip),fupp(ir,ip)
+      real fwbc(0:ir+1,ip),xsign,fup,flw,x,r,xlimiter,corr
+      integer i,j,j_1,j1,j2,ibm
 
       fwbc(1:ir,1:ip)=f20(1:ir,1:ip)   ! fwbc is f20 with B. C.
 
@@ -5597,7 +5622,7 @@ end subroutine diffuse_flc
 
 
 !*******************************************************************************
-  subroutine FLS_2O_1D(cww,fww,faw)
+  recursive subroutine FLS_2O_1D(cww,fww,faw)
 !*******************************************************************************
 ! Routine calculates inter-flux, faw in lnp grid using 2nd order flux limited
 ! scheme with super-bee limiter method
@@ -5942,7 +5967,7 @@ end subroutine diffuse_flc
 
 
 !--------------------------------------------------------------------------
-      subroutine locate1(xx,n,x,j)
+      recursive subroutine locate1(xx,n,x,j)
 !--------------------------------------------------------------------------
 !  Routine return a value of j such that x is between xx(j) and xx(j+1).
 !  xx must be increasing or decreasing monotonically. If not, the locate will
@@ -5954,7 +5979,11 @@ end subroutine diffuse_flc
 !     If x=xx(m), j=m so if x=xx(1), j=1  and if x=xx(n), j=n
 !     If x > xx(1), j=0  and if x < xx(n), j=n
 
-      real xx(n)
+      implicit none
+      integer,intent(in) :: n
+      real,intent(in) :: xx(n),x
+      integer,intent(out) :: j
+      integer nn,i,jl,ju,jm
 
 !  Make sure xx is increasing or decreasing monotonically
       nn=n
@@ -6040,32 +6069,14 @@ end subroutine diffuse_flc
 
 
 !-----------------------------------------------------------------------
-      subroutine lintp(xx,yy,n,x,y)
+      recursive subroutine lintp(xx,yy,n,x,y)
 !-----------------------------------------------------------------------
 !  Routine does 1-D interpolation.  xx must be increasing or decreasing
 !  monotonically. If x is beyound xx, it will be forced inside xx range.
 
       implicit none
-      integer n,i,j,jl,ju,jm
+      integer n,j,jl,ju,jm
       real xx(n),yy(n),x,x1,minxx,maxxx,y,d
-
-!  Make sure xx is increasing or decreasing monotonically
-      do i=2,n
-         if (xx(n).gt.xx(1).and.xx(i).lt.xx(i-1)) then
-            if (abs(xx(i)-xx(i-1)).gt.1.e-4*abs(xx(n)-xx(1))) then
-               write(*,*) ' lintp: xx is not increasing monotonically '
-               write(*,*) n,(xx(j),j=1,n)
-               stop
-            endif
-         endif
-         if (xx(n).lt.xx(1).and.xx(i).gt.xx(i-1)) then
-            if (abs(xx(i)-xx(i-1)).gt.1.e-4*abs(xx(n)-xx(1))) then
-               write(*,*) ' lintp: xx is not decreasing monotonically '
-               write(*,*) n,(xx(j),j=1,n)
-               stop
-            endif
-         endif
-      enddo
 
 !  Make sure x is inside xx range
       minxx=minval(xx)
@@ -6110,7 +6121,7 @@ end subroutine diffuse_flc
 
 
 !-------------------------------------------------------------------------------
-        subroutine lintp2(x,y,v,nx,ny,x1,y1,v1)
+        recursive subroutine lintp2(x,y,v,nx,ny,x1,y1,v1)
 !-------------------------------------------------------------------------------
 !  Routine does 2-D interpolation.  x and y must be increasing or decreasing
 !  monotonically
@@ -6155,7 +6166,7 @@ end subroutine diffuse_flc
 
 !-------------------------------------------------------------------------------
 !       subroutine lintp2b(x,y,v,nx,ny,x1,y1,v1)
-        subroutine lintp2b(y,x,v,ny,nx,y1,x1,v1)
+        recursive subroutine lintp2b(y,x,v,ny,nx,y1,x1,v1)
 !-------------------------------------------------------------------------------
 !  This sub program takes 2-d interpolation. x is 1-D and y is 2-D.
 !
@@ -6875,7 +6886,7 @@ end subroutine hodges_Ylm
 !  Inputs : b1,b2,b3,b4,n
 !  Outputs : f
 ! ************************************************************************
-     subroutine tridiagonal(b1,b2,b3,b4,n,f)
+     recursive subroutine tridiagonal(b1,b2,b3,b4,n,f)
      implicit none
 
      integer,intent(in) :: n
@@ -7534,14 +7545,14 @@ end subroutine hodges_Ylm
 !   - At i=1,2,ir-1 and ir, lower-order schemes are used.
 !*******************************************************************************
 
-      subroutine FLS_HO_2D(iba,f)
+      recursive subroutine FLS_HO_2D(iba,f,fbL0,fbL1,cl,cp,fhol,fhop,fupL,fupp)
       use cimigrid_dim, only: ir,ip
       use cVdrift, only: ihol,ihop
-      use cInterFlux, only: fbL0,fbL1,cl,cp,fhol=>faL,fhop=>fap,fupL,fupp
       implicit none
 
       integer,intent(in) :: iba(ip)
-      real,intent(in) ::  f(ir,ip)
+      real,intent(in) ::  f(ir,ip),fbL0(ip),fbL1(ip),cl(0:ir,ip),cp(ir,ip)
+      real,intent(out) :: fhol(0:ir,ip),fhop(ir,ip),fupL(0:ir,ip),fupp(ir,ip)
       real fwbc(0:ir+1,ip),df,cl1,cp1,cl2,cp2,c1,&
            xsignl(ir,ip),xsignp(ir,ip),xsign,fup,flw2,flw3,flw4,flw5,flw6,flw7,&
            x,r,xlimiter,corr,d1,d2,fc,fu,fd,ref,del,adel,acurv,flim
