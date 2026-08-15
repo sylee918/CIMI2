@@ -466,6 +466,9 @@
 
 ! Initial setup 
       vrcm=0.            ! initial values for RCM potenitals (Volt)
+      Nion=0.
+      density=0.
+      volp=0.
       call readInputData
       t=tstart
       ihol=7                 ! recommend 7 for diople
@@ -1906,16 +1909,6 @@
   endif
 
 ! Start field line tracing.  Field line tracing from north to south.
-!$omp parallel do default(shared) schedule(dynamic, 1) &
-!$omp private(j, i, m, n, ii, ngrid, n8, n7, n6, dssp, sso, ss1, ssh, &
-!$omp         xlat1, phi1, xi, yi, zi, n5, m1, ic, imn, im0, dr0, iout, &
-!$omp         Bfactor, bxint, byint, bzint, xgsm, ygsm, zgsm, xf, yf, zf, &
-!$omp         rf, sinlat, xmag, ymag, zmag, xgeo, ygeo, zgeo, theta, xlong, &
-!$omp         Bri1, Btheta, Bphi, d2, bgood, igood0, igood, ims, mstop, &
-!$omp         mseg, mseg1, mns, m00, m11, dsss, npf1, b_mid, im2, brcN, &
-!$omp         brcS, xkc1, mc, xkm, bmmx, tya33, h33, cosPit, npf, bsi, &
-!$omp         bsbm, bm1, xa, ya, za, rm, xs, ys, zs, bs, dss, dssi, bba, &
-!$omp         xk3, yint, yint1, yinth, tya3, h3, hden_line, xa1, ya1, za1, rs)
   jloop: do j=1,ip
      Bfactor=1.
      iloop: do i=1,iba(j)
@@ -2104,6 +2097,13 @@
 !       rm(1)                       rm(m)                               rm(n+1)
 !      xa,ya,za
 
+        ! Ensure strict monotonic decrease of bm1 from North ionosphere to equator
+        do m=2,im2
+           if (bm1(m) .ge. bm1(m-1)) then
+              bm1(m) = bm1(m-1) * (1.0 - 1.0e-7)
+           endif
+        enddo
+
         ! Set up arrarys at trace grids
         xk3(im2)=0.               ! mirroring around Bmin
         call geocorona(igeo,t,xa(im2),ya(im2),za(im2),h3(im2))
@@ -2139,6 +2139,14 @@
            h3(ngrid)=ssh/ss1
         enddo
         tya3(im2)=tya3(im2-1)
+
+        ! Ensure strict monotonic decrease of xk3 from North ionosphere to equator
+        do m=2,im2-1
+           if (xk3(m) .ge. xk3(m-1)) then
+              xk3(m) = xk3(m-1) * (1.0 - 1.0e-7)
+           endif
+        enddo
+        xk3(im2)=0.
 
         ! find xkcN and xkcS, the K values with mirror points at rc
         call lintp(bm1,xk3,im2,brcN,xkc1)
@@ -2180,7 +2188,6 @@
      enddo iloop
 888  continue
   enddo jloop
-!$omp end parallel do
 
 ! Make sure iba doesn't increase too much from previous j
   do j=1,ip
@@ -2224,10 +2231,10 @@
         BiS(i,j)=BiS(ib,j)
         mlonS(i,j)=mlonS(ib,j)
         volume(i,j)=volume(ib,j)
-        y(i,j,1:ik)=y(ib,j,1:ik)
+        y(i,j,0:ik+1)=y(ib,j,0:ik+1)
         dmu(i,j,1:ik)=dmu(ib,j,1:ik)
-        tya(i,j,1:ik)=tya(ib,j,1:ik)
-        bm(i,j,1:ik)=bm(ib,j,1:ik)
+        tya(i,j,0:ik+1)=tya(ib,j,0:ik+1)
+        bm(i,j,0:ik+1)=bm(ib,j,0:ik+1)
         lnbm(i,j,1:ik)=lnbm(ib,j,1:ik)
      enddo
   enddo
@@ -3874,9 +3881,9 @@
       enddo
 
 ! Write the energy changes in .ece fiels
+   totbsumi=0.
+   totbsum=0.
    if (t.gt.tstart) then
-      totbsumi=0.
-      totbsum=0.
       do n=1,ijs
         open(unit=3,file=trim(outname)//st2(n)//'.ece',status='old', &
              position='append')
@@ -5187,7 +5194,7 @@
   real ompe1,ro1,rbo,ao,DDm,DDp,y_2,kak,dKda,dtU2,dtV2,Eq2,f2d0(iw,ik)
   integer,parameter :: mpa_max=100, iwk_max=64
   real Daa,Dap,Dpp,DUU(0:iw+1,0:ik+1),DVV(0:iw+1,0:ik+1),Uq2(0:iw+1,0:ik+1)
-  real wDaa(0:iw+1,mpa_max),wDpp(0:iw+1,mpa_max),wEq2(0:iw+1,mpa_max),wPA(mpa_max)
+  real wDaa(mpa_max,0:iw+1),wDpp(mpa_max,0:iw+1),wEq2(mpa_max,0:iw+1),wPA(mpa_max)
   real a1d(iwk_max),b1d(iwk_max),c1d(iwk_max),fr(iwk_max),fnew(iwk_max)
   real f0(0:iwk_max+1),DD(0:iwk_max+1),um(iwk_max),up(iwk_max)
 
@@ -5229,13 +5236,13 @@
            mpa=min(ipa, mpa_max)
            wPA(1:mpa)=cPA(1:mpa)
            do k=0,iw+1
-              wDaa(k,1:mpa)=0.
-              wDpp(k,1:mpa)=0.
+              wDaa(1:mpa,k)=0.
+              wDpp(1:mpa,k)=0.
               do L=1,kLat
-                 wDaa(k,1:mpa)=wDaa(k,1:mpa)+cDaa(ipc1,k,1:mpa,iLc1,L)*Cfactor(L)
-                 wDpp(k,1:mpa)=wDpp(k,1:mpa)+cDpp(ipc1,k,1:mpa,iLc1,L)*Cfactor(L)
+                 wDaa(1:mpa,k)=wDaa(1:mpa,k)+cDaa(ipc1,k,1:mpa,iLc1,L)*Cfactor(L)
+                 wDpp(1:mpa,k)=wDpp(1:mpa,k)+cDpp(ipc1,k,1:mpa,iLc1,L)*Cfactor(L)
               enddo
-              wEq2(k,1:mpa)=cEq2(ipc1,k,1:mpa,iLc1,kLat)
+              wEq2(1:mpa,k)=cEq2(ipc1,k,1:mpa,iLc1,kLat)
            enddo
         endif
 
@@ -5255,9 +5262,9 @@
            mpa=min(jpa, mpa_max)
            wPA(1:mpa)=hPA(1:mpa)
            do k=0,iw+1
-              wDaa(k,1:mpa)=hDaa(iph1,k,1:mpa,iLh1)*Hfactor
-              wDpp(k,1:mpa)=hDpp(iph1,k,1:mpa,iLh1)*Hfactor
-              wEq2(k,1:mpa)=hEq2(iph1,k,1:mpa,iLh1)
+              wDaa(1:mpa,k)=hDaa(iph1,k,1:mpa,iLh1)*Hfactor
+              wDpp(1:mpa,k)=hDpp(iph1,k,1:mpa,iLh1)*Hfactor
+              wEq2(1:mpa,k)=hEq2(iph1,k,1:mpa,iLh1)
            enddo
         endif
         if (iexit.eq.1) goto 9999
@@ -5273,13 +5280,14 @@
            if (ao.lt.wPA(1)) ao=wPA(1)
            if (ao.gt.wPA(mpa)) ao=wPA(mpa)
            do k=0,iw+1
-              call lintp(wPA(1:mpa),wDaa(k,1:mpa),mpa,ao,Daa)
-              call lintp(wPA(1:mpa),wDpp(k,1:mpa),mpa,ao,Dpp)
+              call lintp(wPA(1:mpa),wDaa(1:mpa,k),mpa,ao,Daa)
+              call lintp(wPA(1:mpa),wDpp(1:mpa,k),mpa,ao,Dpp)
               DUU(k,m)=Dpp
               DVV(k,m)=kak*kak*Daa
               Uq2(k,m)=lnp(n_e,k)
               if (iDap.eq.1) then
-                 call lintp(wPA(1:mpa),wEq2(k,1:mpa),mpa,ao,Eq2)       ! Eq2 in keV
+                 call lintp(wPA(1:mpa),wEq2(1:mpa,k),mpa,ao,Eq2)       ! Eq2 in keV
+                 if (Eq2.lt.0.) Eq2=0.
                  pq2(k,m)=sqrt(Eq2*(Eq2+2.*511.))*1.6e-16/EM_speed
                  Uq2(k,m)=log(pq2(k,m))    ! Uq2 in lnp
               endif
@@ -5329,7 +5337,11 @@
            do m=1,ik
               f1d(1:iw)=f2d(1:iw,m)
               do k=1,iw
-                 f1dlog(k)=log10(f1d(k))
+                 if (f1d(k).gt.1.e-60) then
+                    f1dlog(k)=log10(f1d(k))
+                 else
+                    f1dlog(k)=-60.
+                 endif
               enddo
               do k=1,iw
                  Uq2k=Uq2(k,m)
@@ -5468,7 +5480,9 @@ end subroutine diffuse_VLF
               enddo
 
               ! Setup for diffusion in V(lnK)
-              Gjac(:)=xjac(n,i,j,k,:)
+              Gjac(1:ik)=xjac(n,i,j,k,1:ik)
+              Gjac(0)=Gjac(1)
+              Gjac(ik+1)=Gjac(ik)
               do m=1,ik
                  f1d(m)=f2(n,i,j,k,m)/xjac(n,i,j,k,m)     ! psd in cimi grid
               enddo
@@ -6038,15 +6052,19 @@ end subroutine diffuse_flc
 !  Make sure xx is increasing or decreasing monotonically
       do i=2,n
          if (xx(n).gt.xx(1).and.xx(i).lt.xx(i-1)) then
-            write(*,*) ' lintp: xx is not increasing monotonically '
-            write(*,*) n,(xx(j),j=1,n)
-            stop
-          endif
+            if (abs(xx(i)-xx(i-1)).gt.1.e-4*abs(xx(n)-xx(1))) then
+               write(*,*) ' lintp: xx is not increasing monotonically '
+               write(*,*) n,(xx(j),j=1,n)
+               stop
+            endif
+         endif
          if (xx(n).lt.xx(1).and.xx(i).gt.xx(i-1)) then
-            write(*,*) ' lintp: xx is not decreasing monotonically '
-            write(*,*) n,(xx(j),j=1,n)
-            stop
-          endif
+            if (abs(xx(i)-xx(i-1)).gt.1.e-4*abs(xx(n)-xx(1))) then
+               write(*,*) ' lintp: xx is not decreasing monotonically '
+               write(*,*) n,(xx(j),j=1,n)
+               stop
+            endif
+         endif
       enddo
 
 !  Make sure x is inside xx range
@@ -7061,7 +7079,11 @@ end subroutine hodges_Ylm
 ! Get density in plasmasphere grid
   do i=1,nlp
      do j=1,npp
-        denp(i,j)=Nion(i,j)/volp(i,j)
+        if (volp(i,j).gt.0.) then
+           denp(i,j)=Nion(i,j)/volp(i,j)
+        else
+           denp(i,j)=0.
+        endif
      enddo
      denp(i,npp+1)=denp(i,1)
   enddo

@@ -59,7 +59,7 @@ rundir:
 	rm $(rundir_path)/D_*.dat 
 	cd $(rundir_path); ln -s $(inputdir_path)/D_* ./
 	rm $(rundir_path)/cimi.dat
-	cd $(rundir_path); ln -s ./cimi.dat.run ./cimi.dat
+	cd $(rundir_path); ln -s ./cimi.dat.mate ./cimi.dat
 	cp tools/*.pro $(rundir_path)
 	mkdir $(rundir_path)/src_cimi
 	cp src/cimi.f90 $(rundir_path)/src_cimi

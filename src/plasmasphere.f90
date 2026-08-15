@@ -317,7 +317,7 @@
 
   do j=1,ip
      do i=1,iba(j)
-        if (Nion(i,j).lt.NTro(i,j)) Nion(i,j)=NTro(i,j)
+        if (isnan(Nion(i,j)) .or. Nion(i,j).lt.NTro(i,j)) Nion(i,j)=NTro(i,j)
      enddo
      do i=iba(j)+1,ir
         Nion(i,j)=NTro(i,j)

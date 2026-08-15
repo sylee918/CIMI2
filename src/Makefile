@@ -21,11 +21,11 @@ OBJECT=\
 	rcm6.f90 \
 	gmresm.f90 
 
-ifx=ifx -r8 -132 -auto -O3 -xHost -qopenmp -mcmodel=medium -Wl,--no-relax 
-ifx1=ifx -r8 -132 -auto -O3 -xHost -qopenmp
-ifort=ifort -r8 -132 -auto -O3 -xHost -qopenmp -mcmodel=medium 
-#ifort=ifort -r8 -132 -auto -O3 -qopenmp
-debug_ifx=ifx -r8 -132 -auto -O0 -traceback -g -check -debug -qopenmp -mcmodel=medium -Wl,--no-relax
+ifx=ifx -r8 -132 -save -O3 -xHost -qopenmp -mcmodel=medium -Wl,--no-relax 
+ifx1=ifx -r8 -132 -save -O3 -xHost -qopenmp
+ifort=ifort -r8 -132 -save -O3 -xHost -qopenmp -mcmodel=medium 
+#ifort=ifort -r8 -132 -save -O3 -qopenmp
+debug_ifx=ifx -r8 -132 -save -O0 -traceback -g -check -debug -qopenmp -mcmodel=medium -Wl,--no-relax
 debug_ifort=ifort -r8 -132 -save -O0 -traceback -g -check -debug -mcmodel=medium
 gfort=gfortran -fdefault-real-8 -ffixed-line-length-132 -fno-automatic -fno-align-commons -O4 
 

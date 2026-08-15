@@ -1817,7 +1817,7 @@ c
       Y=Y-(Y-YR)*R1
       Z=Z-(Z-ZR)*R1
       GOTO 8
-  7   WRITE (*,10)
+  7   CONTINUE ! WRITE (*,10)
       L=LMAX
   8   XF=X
       YF=Y
