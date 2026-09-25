@@ -161,10 +161,10 @@ contains
   call locate_fast(y,ny,y1,j)
   call locate_fast(z,nz,z1,k)
 
+  ! Allow radial extrapolation beyond grid bounds (e.g. R < 2.0 Re)
   a=(x1-x(i))/(x(i+1)-x(i))
-  if (a.lt.0.0) a=0.0
-  if (a.gt.1.0) a=1.0
 
+  ! Keep latitude and longitude clamped to physical bounds [-90, 90] and [0, 360]
   b=(y1-y(j))/(y(j+1)-y(j))
   if (b.lt.0.0) b=0.0
   if (b.gt.1.0) b=1.0

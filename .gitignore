@@ -1,3 +1,4 @@
 inputs/*.dat
 inputs/MATE*.txt
 inputs/*.gsin
+src/*.mod

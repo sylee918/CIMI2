@@ -74,7 +74,7 @@
 ! March 24, 2014
 !   - Add the option (iplsh) to use Tsyganenko-Mukai plasmasheet model
 ! April 25, 2014
-!   - Add the calculation of EMIC convective growth rate with bi-Maxwellian
+!   - Add the calculation of convective growth rate with bi-Maxwellian
 !     and real distribution
 ! July 10, 2014
 !   - Add the capability of calculating He+ flux
