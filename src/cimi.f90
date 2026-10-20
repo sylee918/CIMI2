@@ -2656,6 +2656,7 @@
          Etot,Ptot,Eflux,meanE,EEF,EmeanE,dphi2,Ecri,xloctj, &
          facm1,facp1,birk1d(idim),Peta(ir,ip,ik),sigmapi,Peta1,colat1d(idim), &
          prePec(idim,jdim,je),prePic(idim,jdim,je),pre1D(ip+1),gdE
+    save :: hallB,pedpsiB,pedlamB,prePec,prePic
     real,parameter :: fill=0.    ! value of potential a low latitudes
     character(len=*),parameter ::  file_path="./w2005_dat/"
 
@@ -3041,10 +3042,10 @@
       use closs        
       use cPrecipitate
       use conductance
-      real gride1(0:je),f(ir,ip,iw,ik),xmass(ns)
+      real gride1(0:je),f(ir,ip,iw,ik),xmass(ns),dum1,dum2,dum3,dum4
       real,allocatable,dimension(:) :: roi,ei,eilog
       real,allocatable,dimension(:,:) :: fi,psdi 
-      integer js(ns)
+      integer js(ns),ios
       character outname*13,st2(ns)*2,header*80
 
       inew=1
@@ -3100,16 +3101,39 @@
      read(11,*) plee
      read(11,*) plec
      read(11,*) plel
-     read(11,*) pPreN
-     read(11,*) pPreS
-     read(11,*) pleb
-     read(11,*) HRPe
-     read(11,*) HRPi
-     read(11,*) pedpsi
-     read(11,*) pedlam
-     read(11,*) hall
-     read(11,*) prePe
-     read(11,*) prePi
+     read(11,*,iostat=ios) pPreN,pPreS,pleb,HRPe,HRPi,pedpsi,pedlam,hall, &
+                           prePe,prePi
+     if (ios.ne.0) then
+        write(*,*) 'Notice: reading legacy .le file (scalar pPre/preP)...'
+        rewind(11)
+        read(11,'(a80)') header
+        read(11,*) parmod0
+        read(11,*) ib0 
+        read(11,*) eout
+        read(11,*) xled
+        read(11,*) xlee
+        read(11,*) xlec
+        read(11,*) xlel
+        read(11,*) xleb
+        read(11,*) pled
+        read(11,*) plee
+        read(11,*) plec
+        read(11,*) plel
+        read(11,*) dum1
+        read(11,*) dum2
+        read(11,*) pleb
+        read(11,*) HRPe
+        read(11,*) HRPi
+        read(11,*) pedpsi
+        read(11,*) pedlam
+        read(11,*) hall
+        read(11,*) dum3
+        read(11,*) dum4
+        pPreN(:,:,:,:)=0.
+        pPreS(:,:,:,:)=0.
+        prePe(:,:,:)=0.
+        prePi(:,:,:)=0.
+     endif
      close(11)
   endif
 
@@ -3603,7 +3627,8 @@
   use ModTwinsHden, only: twins_geocorona
   implicit none
   
-  integer iOi,iele,n,i,j,k,m,ntg1,ib
+  integer,save :: iOi,iele
+  integer n,i,j,k,m,ntg1,ib
   real f2(ns,ir,ip,iw,ik),H_factor,O_factor,O_H_ratio,f_factor,MLT1D(nMLTg+1),&
        t,iflux1D(nMLTg+1),eflux1D(nMLTg+1),iflux2D(ip,iw),eflux2D(ip,iw), &
        flux2D(ip,iw),xmlto1,pre1(ijs,ip),dlnp4,fbb,weight,p2dp(ijs,iw),Bz, &
@@ -3723,6 +3748,7 @@
       use cinitial
       use WaveGrowth
       use closs
+      use cPrecipitate
       use rcmgrid
       use current
       use conductance
