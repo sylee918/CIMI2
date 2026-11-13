@@ -546,7 +546,7 @@
 
 !     implicit none
 
-      parameter(isize=idim,jsize=jdim)
+      parameter(jsize=jdim)
       parameter(maxdim=jsize)
 
 
@@ -604,6 +604,7 @@
 !     ibndy(jdim)   = ibndy(3)
 
       do j=2,jdim-1
+       lsflag(j) = .false.
        diff = ain(j)
          idiff = int(diff)
          rmin = float(ibndy(j))

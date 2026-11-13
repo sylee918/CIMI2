@@ -193,7 +193,8 @@
   end module
 
   module cimigrid_dim
-  integer,parameter :: ir=70,ip=48,ik=40,je=24,ig=18,ns=5,irh=20
+  integer :: ir=70
+  integer,parameter :: ip=48,ik=40,je=24,ig=18,ns=5,irh=20
   integer,parameter :: iw=2*je  
              ! ir=no. of grids in latitude in the ionosphere
              ! ip=no. of magnetic local grids ionosphere
@@ -231,46 +232,52 @@
 
   module cgrid
       use cimigrid_dim
-      real xlati(ir,ip),dlati(ir+1,ip),xlath(irh),xlatd(0:ir+1,ip),varL(ir+1), &
-           xlatu(0:ir+1,ip),ksai(ir+1,ip),xkb(ik),mphi(ip),xmass(ns),xk(0:ik+1),&
+      real,allocatable :: xlati(:,:),dlati(:,:),xlatd(:,:),varL(:), &
+           xlatu(:,:),ksai(:,:),varLA(:),potentc(:),xlatA(:,:)
+      real xlath(irh),xkb(ik),mphi(ip),xmass(ns),xk(0:ik+1),&
            gride(ns,je),ebound(ns,0:je),gridp(ns,0:iw+1),lnp(ns,0:iw+1),dlnk, &
            dlnp(ns),gridy(ig),xmass1(6),gride_e(je),xmltA(ip),dmphi(ip), &
-           d4(ns),dvarL,ekev(ns,0:iw+1),dkeV(ns,iw),vel(ns,0:iw+1),varLA(ir), &
-           pcEo(ns,iw),potentc(ir),dphi,mlon(ip),gride_i(je),xlatA(ir,ip)
+           d4(ns),dvarL,ekev(ns,0:iw+1),dkeV(ns,iw),vel(ns,0:iw+1), &
+           pcEo(ns,iw),dphi,mlon(ip),gride_i(je)
   end module
 
   module cfield
     use cimigrid_dim
-    integer iba(ip),iday2,ihour,minu,jnoon,mcN(ir,ip),mcS(ir,ip)
-    real Dst,DstRC,bo(ir,ip),ro(ir,ip),xmlto(ir,ip),xo(ir,ip),yo(ir,ip), &
-         volume(ir,ip),y(ir,ip,0:ik+1),Hdens(ir,ip,ik),xL1,xL2,psi1, &
-         xkcN(ir,ip),fcone(ns,ir,ip,iw,ik),bm(ir,ip,0:ik+1),dmu(ir,ip,ik), &
-         xkcS(ir,ip),xlatiS(ir,ip),phiS(ir,ip),Tbounce(ns,ir,ip,iw,ik), &
-         xjac(ns,ir+1,ip,0:iw+1,0:ik+1),dlnBmdL(ir,ip,ik),dlnBmdp(ir,ip,ik), &
-         dlnBmdL1(ir,ip,ik),dlnBmdp1(ir,ip,ik),lnbm(ir,ip,ik),parmod0(10), &
-         phi(ip),xmlt(ip),rsb(ip),xmltb(ip),bob(ip),tya(ir,ip,0:ik+1), &
-         BiN(ir,ip),BiS(ir,ip),parmod(10),mlonS(ir,ip),xloct(ip+1), &
-         BriN(ir,ip),BriS(ir,ip),zkp,F107,Apt,dsmax,err
+    integer iba(ip),iday2,ihour,minu,jnoon
+    integer,allocatable :: mcN(:,:),mcS(:,:)
+    real,allocatable :: bo(:,:),ro(:,:),xmlto(:,:),xo(:,:),yo(:,:), &
+         volume(:,:),y(:,:,:),Hdens(:,:,:), &
+         xkcN(:,:),fcone(:,:,:,:,:),bm(:,:,:),dmu(:,:,:), &
+         xkcS(:,:),xlatiS(:,:),phiS(:,:),Tbounce(:,:,:,:,:), &
+         xjac(:,:,:,:,:),dlnBmdL(:,:,:),dlnBmdp(:,:,:), &
+         dlnBmdL1(:,:,:),dlnBmdp1(:,:,:),lnbm(:,:,:),tya(:,:,:), &
+         BiN(:,:),BiS(:,:),mlonS(:,:),BriN(:,:),BriS(:,:)
+    real Dst,DstRC,xL1,xL2,psi1,parmod0(10), &
+         phi(ip),xmlt(ip),rsb(ip),xmltb(ip),bob(ip), &
+         parmod(10),xloct(ip+1),zkp,F107,Apt,dsmax,err
   end module
 
   module ccepara
         use cimigrid_dim
-        real ceSigma(ns,iw,2),achar(ns,ir,ip,iw,ik)
+        real ceSigma(ns,iw,2)
+        real,allocatable :: achar(:,:,:,:,:)
   end module
 
   module cPlasmasphere
      use cimigrid_dim
-     integer,parameter :: nlp=144,npp=144    ! grid size for plasmasphere
+     integer :: nlp=144
+     integer,parameter :: npp=144    ! grid size for plasmasphere
      real,parameter :: Tcold=1.       ! plasmasphere temperature in eV
      real,parameter :: densityP=1.e8  ! density to define plasmapause
      real,parameter :: Rcold(4)=[0.77,0.03,0.2,1.] !plasmasphere H,O,He,e
      integer ibp(npp)
      real rppa(ip)          ! plasmapause radial distance
-     real density(ir,ip)    ! cold plasma densities in m^-3
-     real Nion(nlp,npp)     ! Nion=ion per magnetic flux
-     real xlatp(nlp,npp),phip(npp),rp(nlp,npp),Brip(nlp,npp),BripS(nlp,npp)
-     real xlatpS(nlp,npp),phipS(npp),volp(nlp,npp),potenthp(irh,npp)
-     real varLp(nlp),xlatAp(nlp),mphip(npp),potentp(nlp,npp),ksaip(nlp,npp)
+     real,allocatable :: density(:,:)    ! cold plasma densities in m^-3
+     real,allocatable :: Nion(:,:)       ! Nion=ion per magnetic flux
+     real,allocatable :: xlatp(:,:),rp(:,:),Brip(:,:),BripS(:,:)
+     real,allocatable :: xlatpS(:,:),volp(:,:)
+     real,allocatable :: varLp(:),xlatAp(:),potentp(:,:),ksaip(:,:)
+     real phip(npp),phipS(npp),potenthp(irh,npp),mphip(npp)
   end module
 
   module cCoulpara
@@ -281,29 +288,32 @@
 
   module convect
         use cimigrid_dim
-        real birk_f(ir,ip),potent(ir,ip),potenth(irh,ip),AE,AL,SWBz,SWVel
+        real,allocatable :: birk_f(:,:),potent(:,:)
+        real potenth(irh,ip),AE,AL,SWBz,SWVel
   end module
 
   module cVdrift
        use cimigrid_dim
        integer ihol,ihop      ! recommend 7 for diople & 5 for IGRF
-       real vlB(ns,ir,ip,iw,ik),vpB(ns,ir,ip,iw,ik)
-       real vlE(ir,ip),vpE(ir,ip),vlnp(ir,ip,ik)
+       real,allocatable :: vlB(:,:,:,:,:),vpB(:,:,:,:,:)
+       real,allocatable :: vlE(:,:),vpE(:,:),vlnp(:,:,:)
   end module
 
   module cInterFlux
         use cimigrid_dim
-        real fbL0(ip),fbL1(ip),cl(0:ir,ip),cp(ir,ip), &
-             faL(0:ir,ip),fap(ir,ip),fupL(0:ir,ip),fupp(ir,ip) 
+        real fbL0(ip),fbL1(ip)
+        real,allocatable :: cl(:,:),cp(:,:), &
+             faL(:,:),fap(:,:),fupL(:,:),fupp(:,:) 
   end module
 
   module cinitial
         use cimigrid_dim
         integer ib0(ip)
-        real f2(ns,ir,ip,iw,ik),psum(ns,ir,ip,je+1), &
-             rbsum(ns),rcsum(ns),eout(ns,2,3,je+1), &
-             esum3(ns,3,ip,je+1),psum3(ns,3,ip,je+1),E2D(ns,ir,ip), &
-             Lstar_max(0:ik),Lstar(ir,ip,0:ik)
+        real,allocatable :: f2(:,:,:,:,:),psum(:,:,:,:), &
+             E2D(:,:,:),Lstar(:,:,:)
+        real rbsum(ns),rcsum(ns),eout(ns,2,3,je+1), &
+             esum3(ns,3,ip,je+1),psum3(ns,3,ip,je+1), &
+             Lstar_max(0:ik)
   end module
 
   module closs
@@ -312,15 +322,15 @@
              xlec(ns,3,ip,je+1),xleb(ns,3,ip,je+1), &
              pled(ns,3,ip,je+1),plee(ns,3,ip,je+1),plel(ns,3,ip,je+1), &
              plec(ns,3,ip,je+1),pleb(ns,3,ip,je+1)
-        real HRPe(ns,ir,ip),HRPi(ns,ir,ip),HRPe0(ns,ir,ip),HRPi0(ns,ir,ip)
+        real,allocatable :: HRPe(:,:,:),HRPi(:,:,:),HRPe0(:,:,:),HRPi0(:,:,:)
   end module
 
   module cPrecipitate
         use cimigrid_dim
         integer inew
-        real pPreN(ns,ir,ip,je+1),pPre0N(ns,ir,ip,je+1), &
-             pPreS(ns,ir,ip,je+1),pPre0S(ns,ir,ip,je+1), &
-             prePe(ir,ip,je),prePi(ir,ip,je)
+        real,allocatable :: pPreN(:,:,:,:),pPre0N(:,:,:,:), &
+             pPreS(:,:,:,:),pPre0S(:,:,:,:), &
+             prePe(:,:,:),prePi(:,:,:)
         real factorAB(je),preP1(je)
   end module
 
@@ -341,7 +351,7 @@
   module cWpower
      use cimigrid_dim
      integer kAE,kBs,kVs,kLA,kLB,kltA,kltB
-     real CHpower(ir,ip),HIpower(ir,ip),ompe(ir,ip)
+     real,allocatable :: CHpower(:,:),HIpower(:,:),ompe(:,:)
      real Cpower0,Hpower0
      real,allocatable,dimension(:,:,:,:,:,:) :: CpowerAr      ! from Homayan
      real,allocatable,dimension(:,:,:,:,:) :: HpowerAr     ! Homayan's hiss
@@ -354,20 +364,21 @@
          use cimigrid_dim
          integer,parameter :: nw=100 ! number of normalized frequency, Xpar
          real Xpar(nw)               ! normalized freq by H+ gyro-freq
-         real denWP(ns,ir,ip),TparaWP(ns,ir,ip),TperpWP(ns,ir,ip) ! m^-3,keV
-         real fWP(ns,ir,ip,iw,ik)    ! psd in m^-6 s^3
-         real Vpar(ns,ir,ip,iw,ik),Vper(ns,ir,ip,iw)
+         real,allocatable :: denWP(:,:,:),TparaWP(:,:,:),TperpWP(:,:,:) ! m^-3,keV
+         real,allocatable :: fWP(:,:,:,:,:)    ! psd in m^-6 s^3
+         real,allocatable :: Vpar(:,:,:,:,:),Vper(:,:,:,:)
   end module
 
   module crtp
      use cimigrid_dim, only: ir,ip
      integer,parameter :: nth=59
-     real Rrtp(ir),Trtp(nth),Prtp(ip+1)
+     real,allocatable :: Rrtp(:)
+     real Trtp(nth),Prtp(ip+1)
   end module
 
   module cStDiTime
          use cimigrid_dim
-         real SDtime(ir,ip,iw,ik)
+         real,allocatable :: SDtime(:,:,:,:)
   end module
 
   module tsy_plasma
@@ -396,41 +407,44 @@
 ! Modules for rcm6
       module rcmgrid_dim
              use cimigrid_dim
-             parameter(jdimf=ip ,idim=ir,jdim=ip+3,ncoeff=5,signbe=1.)
+             integer :: idim=70
+             parameter(jdimf=ip ,jdim=ip+3,ncoeff=5,signbe=1.)
              parameter(iwdim=iw,ikdim=ik,ichdim=ns)
              parameter (n_kp=6)       ! Hardy model: kp from 0 to n_kp
       end module
       module rcmgrid
              use rcmgrid_dim,only: idim,jdim,jdimf,ncoeff,signbe,iwdim,ikdim, &
                                    ichdim,n_kp
-             real dlam,dpsi,ri,re,offset,alpha(idim,jdim),beta(idim,jdim),&
-                  colat(idim,jdim),aloct(idim,jdim),sini(idim,jdim),&
-                  vcorot(idim,jdim),bir(idim,jdim),ain(jdim),&
-                  xmin(idim,jdim),ymin(idim,jdim)
+             real dlam,dpsi,ri,re,offset,ain(jdim)
+             real,allocatable :: alpha(:,:),beta(:,:), &
+                  colat(:,:),aloct(:,:),sini(:,:), &
+                  vcorot(:,:),bir(:,:),xmin(:,:),ymin(:,:)
              integer ibndy(jdim),imin,imax,jmax,ii1,ii2,jj1,jj2,iint,jint, &
                      jwrap,jdif
       end module
       module plasma
              use rcmgrid_dim,only: idim,jdim
              real, allocatable, dimension(:,:,:,:,:) :: wk,eta
-             real vm(idim,jdim)
+             real, allocatable :: vm(:,:)
       end module
       module potential
              use rcmgrid_dim,only: idim,jdim
-             real vrcm(idim,jdim),vpob(jdim)
+             real, allocatable :: vrcm(:,:)
+             real vpob(jdim)
       end module
       module coefficients
              use rcmgrid_dim,only: idim,jdim,ncoeff
-             real c(ncoeff,idim,jdim)
+             real, allocatable :: c(:,:,:)
       end module
       module conductance
              use rcmgrid_dim,only: idim,jdim
-             real pedpsi(idim,jdim),pedlam(idim,jdim),hall(idim,jdim),&
-                  qtped(idim,jdim),qtplam(idim,jdim),qthall(idim,jdim),ss(jdim)
+             real, allocatable :: pedpsi(:,:),pedlam(:,:),hall(:,:), &
+                  qtped(:,:),qtplam(:,:),qthall(:,:)
+             real ss(jdim)
       end module
       module current
              use rcmgrid_dim,only: idim,jdim
-             real birk(idim,jdim)
+             real, allocatable :: birk(:,:)
       end module
       module qtconductance
              integer idim1,jdim1
@@ -465,11 +479,11 @@
       use ModIonDiff, only: init_ion_diff,diffuse_UV_ions,iEmicDiff
 
 ! Initial setup 
+      call readInputData
       vrcm=0.            ! initial values for RCM potenitals (Volt)
       Nion=0.
       density=0.
       volp=0.
-      call readInputData
       t=tstart
       ihol=7                 ! recommend 7 for diople
       if (intB.eq.1) ihol=5  ! recommend 5 for IGRF
@@ -521,14 +535,14 @@
 
 ! Read diffusion coeffs, BU wave pwoer, and calculate wave power 
       iwave=0
-      if (ichor.ne.0.or.ihiss.ne.0.or.iEmicDiff) iwave=1
+      if ((ichor.ne.0.or.ihiss.ne.0).and.n_e.gt.0) iwave=1
       if (iwave.eq.1) write(*,*) 'iDaa,iDpp,iDap ',iDaa,iDpp,iDap
       if (ichor.ne.0) write(*,*) 'klat ',klat
-      call readDiffCoef(ichor,ihiss)
       CHpower(:,:)=0.
       HIpower(:,:)=0.
       ompe(:,:)=0.           
       if (iwave.eq.1) then
+         call readDiffCoef(ichor,ihiss)
          call ReadWavePower
          call WavePower(density,Bo,ro,xmlto,iba,icP,ihP,ichor,ihiss)
       endif
@@ -742,6 +756,7 @@
   read(4,*) eplsh              ! ePS: (1)ne=ni,TiTe, (2)RBE, (3)Dubyagin's model
   read(4,*) TiTe               ! Ti/Te @ booundary. TiTe=-1. if RBE bc for e-
   read(4,*) rb                 ! model boundary in RE at equator
+  call allocate_cimi_arrays(rb)
   read(4,*) hlosscone          ! loss cone altitude in km
   read(4,*) ipot      ! convection: 1=Weimer, 2=SCE+Hardy, 3=SCE+j||, 4=SCE+Prec
   read(4,*) ihigh,icon         ! hiLatPot:0=Weimer,1=Boyle,2=Hill; icon
@@ -1179,6 +1194,143 @@
 
 
 !***********************************************************************
+!                        allocate_cimi_arrays
+!  Dynamically set grid dimensions (ir, idim, nlp) from rb and allocate
+!  module-level arrays so thatrb=10. matches the original grid exactly
+!  and other rb values preserve the latitudinal grid resolution.
+!***********************************************************************
+  subroutine allocate_cimi_arrays(rb_in)
+  use cimigrid_dim
+  use cgrid
+  use cfield
+  use ccepara
+  use cPlasmasphere
+  use convect
+  use cVdrift
+  use cInterFlux
+  use cinitial
+  use closs
+  use cPrecipitate
+  use cWpower
+  use WaveGrowth
+  use crtp
+  use cStDiTime
+  use rcmgrid_dim
+  use rcmgrid
+  use plasma
+  use potential
+  use coefficients
+  use conductance
+  use current
+  implicit none
+  real, intent(in) :: rb_in
+
+  if (rb_in.eq.10.) then
+     ir = 70
+     nlp = 144
+  else
+     ir = nint(71.5*(1.3*rb_in-1.08)/(13.0-1.08) - 1.5)
+     nlp = nint(143.0*(1.3*rb_in-1.08)/(13.0-1.08) + 1.0)
+  endif
+  idim = ir
+  write(*,'(a,f8.2,a,i4,a,i4,a,i4)') 'rb=',rb_in,' -> ir=',ir,', idim=',idim,', nlp=',nlp
+
+  ! cgrid
+  allocate(xlati(ir,ip),dlati(ir+1,ip),xlatd(0:ir+1,ip),varL(ir+1), &
+           xlatu(0:ir+1,ip),ksai(ir+1,ip),varLA(ir),potentc(ir),xlatA(ir,ip))
+  xlati=0.; dlati=0.; xlatd=0.; varL=0.; xlatu=0.; ksai=0.
+  varLA=0.; potentc=0.; xlatA=0.
+
+  ! cfield
+  allocate(mcN(ir,ip),mcS(ir,ip),bo(ir,ip),ro(ir,ip),xmlto(ir,ip), &
+           xo(ir,ip),yo(ir,ip),volume(ir,ip),y(ir,ip,0:ik+1),Hdens(ir,ip,ik), &
+           xkcN(ir,ip),fcone(ns,ir,ip,iw,ik),bm(ir,ip,0:ik+1),dmu(ir,ip,ik), &
+           xkcS(ir,ip),xlatiS(ir,ip),phiS(ir,ip),Tbounce(ns,ir,ip,iw,ik), &
+           xjac(ns,ir+1,ip,0:iw+1,0:ik+1),dlnBmdL(ir,ip,ik),dlnBmdp(ir,ip,ik), &
+           dlnBmdL1(ir,ip,ik),dlnBmdp1(ir,ip,ik),lnbm(ir,ip,ik), &
+           tya(ir,ip,0:ik+1),BiN(ir,ip),BiS(ir,ip),mlonS(ir,ip), &
+           BriN(ir,ip),BriS(ir,ip))
+  mcN=0; mcS=0; bo=0.; ro=0.; xmlto=0.; xo=0.; yo=0.; volume=0.
+  y=0.; Hdens=0.; xkcN=0.; fcone=0.; bm=0.; dmu=0.; xkcS=0.
+  xlatiS=0.; phiS=0.; Tbounce=0.; xjac=0.; dlnBmdL=0.; dlnBmdp=0.
+  dlnBmdL1=0.; dlnBmdp1=0.; lnbm=0.; tya=0.; BiN=0.; BiS=0.
+  mlonS=0.; BriN=0.; BriS=0.
+
+  ! ccepara
+  allocate(achar(ns,ir,ip,iw,ik))
+  achar=0.
+
+  ! cPlasmasphere
+  allocate(density(ir,ip),Nion(nlp,npp),xlatp(nlp,npp),rp(nlp,npp), &
+           Brip(nlp,npp),BripS(nlp,npp),xlatpS(nlp,npp),volp(nlp,npp), &
+           varLp(nlp),xlatAp(nlp),potentp(nlp,npp),ksaip(nlp,npp))
+  density=0.; Nion=0.; xlatp=0.; rp=0.; Brip=0.; BripS=0.
+  xlatpS=0.; volp=0.; varLp=0.; xlatAp=0.; potentp=0.; ksaip=0.
+
+  ! convect
+  allocate(birk_f(ir,ip),potent(ir,ip))
+  birk_f=0.; potent=0.
+
+  ! cVdrift
+  allocate(vlB(ns,ir,ip,iw,ik),vpB(ns,ir,ip,iw,ik), &
+           vlE(ir,ip),vpE(ir,ip),vlnp(ir,ip,ik))
+  vlB=0.; vpB=0.; vlE=0.; vpE=0.; vlnp=0.
+
+  ! cInterFlux
+  allocate(cl(0:ir,ip),cp(ir,ip),faL(0:ir,ip),fap(ir,ip), &
+           fupL(0:ir,ip),fupp(ir,ip))
+  cl=0.; cp=0.; faL=0.; fap=0.; fupL=0.; fupp=0.
+
+  ! cinitial
+  allocate(f2(ns,ir,ip,iw,ik),psum(ns,ir,ip,je+1), &
+           E2D(ns,ir,ip),Lstar(ir,ip,0:ik))
+  f2=0.; psum=0.; E2D=0.; Lstar=0.
+
+  ! closs
+  allocate(HRPe(ns,ir,ip),HRPi(ns,ir,ip),HRPe0(ns,ir,ip),HRPi0(ns,ir,ip))
+  HRPe=0.; HRPi=0.; HRPe0=0.; HRPi0=0.
+
+  ! cPrecipitate
+  allocate(pPreN(ns,ir,ip,je+1),pPre0N(ns,ir,ip,je+1), &
+           pPreS(ns,ir,ip,je+1),pPre0S(ns,ir,ip,je+1), &
+           prePe(ir,ip,je),prePi(ir,ip,je))
+  pPreN=0.; pPre0N=0.; pPreS=0.; pPre0S=0.; prePe=0.; prePi=0.
+
+  ! cWpower
+  allocate(CHpower(ir,ip),HIpower(ir,ip),ompe(ir,ip))
+  CHpower=0.; HIpower=0.; ompe=0.
+
+  ! WaveGrowth
+  allocate(denWP(ns,ir,ip),TparaWP(ns,ir,ip),TperpWP(ns,ir,ip), &
+           fWP(ns,ir,ip,iw,ik),Vpar(ns,ir,ip,iw,ik),Vper(ns,ir,ip,iw))
+  denWP=0.; TparaWP=0.; TperpWP=0.; fWP=0.; Vpar=0.; Vper=0.
+
+  ! crtp
+  allocate(Rrtp(ir))
+  Rrtp=0.
+
+  ! cStDiTime
+  allocate(SDtime(ir,ip,iw,ik))
+  SDtime=0.
+
+  ! rcmgrid, plasma, potential, coefficients, conductance, current
+  allocate(alpha(idim,jdim),beta(idim,jdim),colat(idim,jdim), &
+           aloct(idim,jdim),sini(idim,jdim),vcorot(idim,jdim), &
+           bir(idim,jdim),xmin(idim,jdim),ymin(idim,jdim))
+  alpha=0.; beta=0.; colat=0.; aloct=0.; sini=0.; vcorot=0.
+  bir=0.; xmin=0.; ymin=0.
+
+  allocate(vm(idim,jdim),vrcm(idim,jdim),c(ncoeff,idim,jdim), &
+           pedpsi(idim,jdim),pedlam(idim,jdim),hall(idim,jdim), &
+           qtped(idim,jdim),qtplam(idim,jdim),qthall(idim,jdim), &
+           birk(idim,jdim))
+  vm=0.; vrcm=0.; c=0.; pedpsi=0.; pedlam=0.; hall=0.
+  qtped=0.; qtplam=0.; qthall=0.; birk=0.
+
+  end subroutine allocate_cimi_arrays
+
+
+!***********************************************************************
 !                        grids
 !                  set up all the grids
 !***********************************************************************
@@ -1209,6 +1361,7 @@
   rc_m=rc*re_m       ! ionosphere distance in meter
   xlatmn=15.         ! for dipole internal field (intB=0)
   xlatmx=71.0        !
+  if (rb.ne.10.) xlatmx=acosd(cosd(71.0)*sqrt(10./rb))
 
 ! Set up geomagnetic longitude grid at the ionosphere.
   dphi=2.*pi/ip    
@@ -1737,7 +1890,7 @@
    dsmax=0.2          
 
 !  updating NumHour variable depending on time "t"
-   NumHour = aint(t/3600.)
+   NumHour = min(max(int(t/3600.), 0), 71)
 
 !  Save previous bm and iba
       if (t.gt.tstart) then
@@ -1895,8 +2048,8 @@
            xlat1=xlati(i,j)
            sinlat=sin(xlat1)
            coslat=cos(xlat1)
-           BriN(i,j)=2.*xme*sinlat/rc3            ! dipole Bri
-           BiN(i,j)=xme*sqrt(1.+3.*sinlat)/rc3    ! dipole Bi
+           BriN(i,j)=2.*xme*sinlat/rc3                   ! dipole Bri
+           BiN(i,j)=xme*sqrt(1.+3.*sinlat*sinlat)/rc3    ! dipole Bi
            if (intB.eq.1) then                ! IGRF internal field
               xi=rc*coslat*cos(mphi(j))
               yi=rc*coslat*sin(mphi(j))
@@ -2185,8 +2338,10 @@
         ! field line curvature (FLC) calculation
         if (t.ge.tflc) then
            imn=minloc(bm1(1:n),dim=1)
-           call calc_flc_para(i,j,7,4,rm(imn),dss(imn-3:imn+3),xa(imn-3:imn+3),&
-                              ya(imn-3:imn+3),za(imn-3:imn+3),bm1(imn-3:imn+3))
+           if (imn.ge.4.and.imn+3.le.n) then
+              call calc_flc_para(i,j,7,4,rm(imn),dss(imn-3:imn+3),xa(imn-3:imn+3),&
+                                 ya(imn-3:imn+3),za(imn-3:imn+3),bm1(imn-3:imn+3))
+           endif
         endif
 
      enddo iloop
@@ -2470,8 +2625,11 @@
         rbmin(ic)=r_xy(m) 
      endif
   enddo
-  imn=ibmin(1)
-  if (ic.gt.1) then
+  if (ic.eq.0) then
+     imn=minloc(bs(1:npf),dim=1)
+  else if (ic.eq.1) then
+     imn=ibmin(1)
+  else
      call indexx(ic,rbmin,indx)
      imn=ibmin(indx(ic))
   endif
@@ -2516,6 +2674,7 @@
         ! cross section of ion-H 
         x=flog_keV
         if (x.lt.-2.) x=-2.
+        d=-99.
         if (js(n).eq.1) &      ! cross section of H+-H
            d=-18.767-0.11017*x-3.8173e-2*x**2-0.1232*x**3-5.0488e-2*x**4
         if (js(n).eq.2) &      ! cross section of O+-H
@@ -2524,7 +2683,11 @@
            d=-20.789+0.92316*x-0.68017*x**2+0.66153*x**3-0.20998*x**4
         if (js(n).eq.4) &      ! cross section of N+-H
           call lintp(nene,log10(nsig),10,Ekev1,d)
-        ceSigma(n,k,1)=10.**d      ! cross section with [H] in m^2
+        if (js(n).le.4) then
+           ceSigma(n,k,1)=10.**d      ! cross section with [H] in m^2
+        else
+           ceSigma(n,k,1)=0.
+        endif
 
         ! cross section of ion-O
         ceSigma(n,k,2)=0. 
@@ -2651,14 +2814,21 @@
          colatp1,xlat1,dPdL,dPdp,Brik,birkf(ip+1), &
          delmlt,c0,Tilt,fac0,gLat,Ediff1,Ediff2,dvarL2,birk1, &
          gMLT,vdrop,Psw,Esw,phim,sigmaHi,phisa,pcp_Hill,phi1,thetab, &
-         sigmap,sigmah,Epot1,theta1,hallB(idim,jdim), &
-         sigmap2I,sigmah2I,pedpsiB(idim,jdim),pedlamB(idim,jdim), &
+         sigmap,sigmah,Epot1,theta1, &
+         sigmap2I,sigmah2I, &
          Etot,Ptot,Eflux,meanE,EEF,EmeanE,dphi2,Ecri,xloctj, &
          facm1,facp1,birk1d(idim),Peta(ir,ip,ik),sigmapi,Peta1,colat1d(idim), &
-         prePec(idim,jdim,je),prePic(idim,jdim,je),pre1D(ip+1),gdE
-    save :: hallB,pedpsiB,pedlamB,prePec,prePic
+         pre1D(ip+1),gdE
+    real,allocatable,save :: hallB(:,:),pedpsiB(:,:),pedlamB(:,:), &
+                             prePec(:,:,:),prePic(:,:,:)
     real,parameter :: fill=0.    ! value of potential a low latitudes
     character(len=*),parameter ::  file_path="./w2005_dat/"
+
+  if (.not.allocated(hallB)) then
+     allocate(hallB(idim,jdim),pedpsiB(idim,jdim),pedlamB(idim,jdim), &
+              prePec(idim,jdim,je),prePic(idim,jdim,je))
+     hallB=0.; pedpsiB=0.; pedlamB=0.; prePec=0.; prePic=0.
+  endif
 
   dphi2=dphi*2.       ! parameter for E field calculation
   Ecri=35.            ! critical E field value in mV/m
@@ -2932,35 +3102,39 @@
          if (js(n).le.4) icharge=1           ! ions       
          if (js(n).ge.5) icharge=-1          ! electrons
          Eo=xmass(n)*Em_speed*Em_speed       ! rest energy
-         do k=1,iw
-            pcEo1=pcEo(n,k)*1000./icharge    ! *1000 because pcEo in keV
-            do m=1,ik
-               do i=1,ir
-                  i0=i-1
-                  if (i0.lt.1) i0=1
-                  i1=i+1
-                  if (i1.gt.ir) i1=ir
-                  do j=1,ip
-                     j0=j-1
-                     if (j0.lt.1) j0=j0+ip
-                     j1=j+1
-                     if (j1.gt.ip) j1=j1-ip
+         do m=1,ik
+            do k=1,iw
+               pcEo1=pcEo(n,k)*1000./icharge    ! *1000 because pcEo in keV
+               do j=1,ip
+                  j0=j-1
+                  if (j0.lt.1) j0=j0+ip
+                  j1=j+1
+                  if (j1.gt.ip) j1=j1-ip
+                  do i=1,ir
+                     i0=i-1
+                     if (i0.lt.1) i0=1
+                     i1=i+1
+                     if (i1.gt.ir) i1=ir
                      ! calculate vlB at (i+0.5,j) and vpB at (i,j+0.5)
                      ksai1=0.5*(ksai(i1,j)+ksai(i,j)) 
                      if (i1.le.iba(j0).and.i1.le.iba(j1)) then
                         vlB(n,i,j,k,m)=-pcEo1*dlnBmdp1(i,j,m)/ksai1
-                     else
+                     else if (i.gt.1) then
                         vlB(n,i,j,k,m)=vlB(n,i-1,j,k,m)
+                     else
+                        vlB(n,i,j,k,m)=0.
                      endif
                      if (i1.le.iba(j1).and.i1.le.iba(j)) then
                         vpB(n,i,j,k,m)=pcEo1*dlnBmdL1(i,j,m)/ksai(i,j)
-                     else
+                     else if (i.gt.1) then
                         vpB(n,i,j,k,m)=vpB(n,i-1,j,k,m)  
+                     else
+                        vpB(n,i,j,k,m)=0.
                      endif
                   enddo
-               enddo          ! end of i loop
-            enddo             ! end of j loop
-         enddo                ! end of k loop
+               enddo          ! end of j loop
+            enddo             ! end of k loop
+         enddo                ! end of m loop
       enddo                   ! end of do n=1,ijs
 
       end subroutine VdriftB
@@ -2989,16 +3163,16 @@
       potentr(1:ir,1:ip)=potent(1:ir,1:ip)
       potentr(ir+1,1:ip)=potenth(1,1:ip)
 
-      do i=1,ir
-         i0=i-1
-         if (i0.lt.1) i0=1
-         i1=i+1
-         dvarL1=(i1-i0)*dvarL
-         do j=1,ip
-            j0=j-1
-            if (j0.lt.1) j0=j0+ip
-            j1=j+1
-            if (j1.gt.ip) j1=j1-ip
+      do j=1,ip
+         j0=j-1
+         if (j0.lt.1) j0=j0+ip
+         j1=j+1
+         if (j1.gt.ip) j1=j1-ip
+         do i=1,ir
+            i0=i-1
+            if (i0.lt.1) i0=1
+            i1=i+1
+            dvarL1=(i1-i0)*dvarL
 
             ! calculate vlE at (i+0.5,j)
             ksai1=0.5*(ksai(i1,j)+ksai(i,j))
@@ -3020,8 +3194,10 @@
                if (i.le.iba(j0).and.i.le.iba(j1)) then
                   vdBm=vdL*dlnBmdL(i,j,m)+vdp*dlnBmdp(i,j,m)
                   vlnp(i,j,m)=vdBm/2.
-               else
+               else if (i.gt.1) then
                   vlnp(i,j,m)=vlnp(i-1,j,m)      
+               else
+                  vlnp(i,j,m)=0.
                endif
             enddo     
          enddo          ! end of i loop
@@ -3785,11 +3961,8 @@
       f(:,:,:,:,:)=0.
       f5d(:,:,:,:,:)=0.
       do n=1,ijs
-         do i=1,ir
-            do j=1,ip
-
-               do m=0,ik+1
-               enddo
+         do j=1,ip
+            do i=1,ir
 
                denWP(n,i,j)=0.       
                TparaWP(n,i,j)=0.     
@@ -4178,13 +4351,17 @@
   r800=1.+8.e5/re_m
   rRatio3=(rc/r800)**3
   do i=1,ir
-     Bratio=rRatio3*sqrt((4.-3.*r800/varLA(i))/(4.-3.*rc/varLA(i)))
+     Bratio=rRatio3*sqrt(max(0.,(4.-3.*r800/varLA(i))/(4.-3.*rc/varLA(i))))
      do j=1,ip
         Brc=0.5*(BiN(i,j)+BiS(i,j))
-        SArc=1.-sqrt(1.-bo(i,j)/Brc)    ! solid angle of losscone at rc
+        SArc=1.-sqrt(max(0.,1.-bo(i,j)/Brc))    ! solid angle of losscone at rc
         B800=Bratio*Brc
-        SA800=1.-sqrt(1.-bo(i,j)/B800)  ! solid angle of losscone at 800km
-        SAratio=SA800/SArc
+        if (B800.gt.0..and.SArc.gt.0.) then
+           SA800=1.-sqrt(max(0.,1.-bo(i,j)/B800))  ! solid angle of losscone at 800km
+           SAratio=SA800/SArc
+        else
+           SAratio=1.
+        endif
         prePi(i,j,:)=SAratio*prePi(i,j,:)
         prePe(i,j,:)=SAratio*prePe(i,j,:)
      enddo
@@ -4610,27 +4787,24 @@
   use cgrid
   use cfield
   use cinitial
-  real gride1(0:je),ekev1,pPre(ns,ir,ip,je+1),p0(ir,ip,je+1) 
+  implicit none
+  integer ijs,isum,n,j,i,m,k,kk
+  real pPre(ns,ir,ip,je+1),p0(ir,ip,je+1),weight,d4n
 
 ! Calculate psum, etc.
   do n=1,ijs
      p0(1:ir,1:ip,1:je+1)=psum(n,1:ir,1:ip,1:je+1)
      psum(n,1:ir,1:ip,1:je+1)=0.
-     gride1(0:je)=ebound(n,0:je)
+     d4n=d4(n)
+!$omp parallel do default(shared) private(j,i,m,k,kk,weight)
      do j=1,ip
-        xlatb=xlati(iba(j),j)
         do i=1,iba(j)
            do m=1,ik
               do k=1,iw
-                 ekev1=ekev(n,k)
-                 weight=d4(n)*f2(n,i,j,k,m)
+                 weight=d4n*f2(n,i,j,k,m)
                  psum(n,i,j,je+1)=psum(n,i,j,je+1)+weight
-                 kkloop: do kk=1,je
-                    if (ekev1.gt.gride1(kk-1).and.ekev1.le.gride1(kk)) then
-                       psum(n,i,j,kk)=psum(n,i,j,kk)+weight
-                       exit kkloop
-                    endif
-                 enddo kkloop
+                 kk=(k+1)/2
+                 psum(n,i,j,kk)=psum(n,i,j,kk)+weight
               enddo
            enddo
         enddo               ! end of do i=1,iba(j)
@@ -4644,6 +4818,7 @@
         endif
 
      enddo                   ! end of do j=1,ip
+!$omp end parallel do
   enddo                      ! end of do n=1,ijs
 
   end subroutine sume
@@ -4658,18 +4833,23 @@
   use cread2
   use cinitial
   use cfield,only: ro,iba
-  real e0(3,ip,je+1),xle(ns,3,ip,je+1),gride1(0:je),ekev1, &
-       ple(ns,3,ip,je+1),p0(3,ip,je+1)
+  implicit none
+  integer n,j,i,ii,m,k,kk
+  real xL1,xL2,e0(3,ip,je+1),xle(ns,3,ip,je+1),ekev1, &
+       ple(ns,3,ip,je+1),p0(3,ip,je+1),weight,weighte,dee,dpe, &
+       rbsum_loc,rcsum_loc,d4n
 
 ! Calculate esum3, psum3, etc.
     do n=1,ijs
-       rbsum(n)=0.
-       rcsum(n)=0.
+       rbsum_loc=0.
+       rcsum_loc=0.
        e0(1:3,1:ip,1:je+1)=esum3(n,1:3,1:ip,1:je+1)
        p0(1:3,1:ip,1:je+1)=psum3(n,1:3,1:ip,1:je+1)
        esum3(n,1:3,1:ip,1:je+1)=0.
        psum3(n,1:3,1:ip,1:je+1)=0.
-       gride1(0:je)=ebound(n,0:je)
+       d4n=d4(n)
+!$omp parallel do default(shared) private(j,i,ii,m,k,kk,ekev1,weight,weighte,dee,dpe) &
+!$omp reduction(+:rbsum_loc,rcsum_loc)
        do j=1,ip
           do i=1,iba(j)
              ii=2
@@ -4678,19 +4858,15 @@
              do m=1,ik
                 do k=1,iw
                    ekev1=ekev(n,k)
-                   weight=d4(n)*f2(n,i,j,k,m)
+                   weight=d4n*f2(n,i,j,k,m)
                    weighte=ekev1*weight
                    psum3(n,ii,j,je+1)=psum3(n,ii,j,je+1)+weight
                    esum3(n,ii,j,je+1)=esum3(n,ii,j,je+1)+weighte
-                   rbsum(n)=rbsum(n)+weighte
-                   if (ro(i,j).le.6.6) rcsum(n)=rcsum(n)+weighte
-                   kkloop: do kk=1,je
-                      if (ekev1.gt.gride1(kk-1).and.ekev1.le.gride1(kk)) then
-                         psum3(n,ii,j,kk)=psum3(n,ii,j,kk)+weight
-                         esum3(n,ii,j,kk)=esum3(n,ii,j,kk)+weighte
-                         exit kkloop
-                      endif
-                   enddo kkloop
+                   rbsum_loc=rbsum_loc+weighte
+                   if (ro(i,j).le.6.6) rcsum_loc=rcsum_loc+weighte
+                   kk=(k+1)/2
+                   psum3(n,ii,j,kk)=psum3(n,ii,j,kk)+weight
+                   esum3(n,ii,j,kk)=esum3(n,ii,j,kk)+weighte
                 enddo
              enddo
           enddo               ! end of do i=1,iba(j)
@@ -4703,6 +4879,9 @@
              enddo
           enddo                ! end of i=1,3
        enddo                   ! end of do j=1,ip
+!$omp end parallel do
+       rbsum(n)=rbsum_loc
+       rcsum(n)=rcsum_loc
     enddo                      ! end of do n=1,ijs
 
     end subroutine sum3band
@@ -4726,6 +4905,8 @@
      do i=1,iba(j)       
         xkc1=xkcN(i,j)
         mc=mcN(i,j)
+        dkc=1.
+        dko=0.
         if (mc.ge.1.and.mc.lt.ik) then
            dkc=(xkb(mc+1)-xkc1)/(xkb(mc+1)-xkb(mc)) ! fraction of dk in losscone
            dko=1.-dkc                               ! fraction outside losscone
@@ -4764,6 +4945,8 @@
      do i=1,iba(j)
         xkc1=xkcS(i,j)
         mc=mcS(i,j)
+        dkc=1.
+        dko=0.
         if (mc.ge.1.and.mc.lt.ik) then
            dkc=(xkb(mc+1)-xkc1)/(xkb(mc+1)-xkb(mc)) ! fraction of dk in losscone
            dko=1.-dkc                               ! fraction outside losscone
@@ -4886,22 +5069,13 @@
               if (ib.gt.iba(j_1)) dPart=dPart+cp(ib,j_1)*fap(ib,j_1)*d4(n)
               if (ib.gt.iba(j1)) dPart=dPart-cp(ib,j)*fap(ib,j)*d4(n)
               dEner=ekev1*dPart
+              kk=(k+1)/2
               if (dPart.gt.0.) then
                  eout(n,1,ii,je+1)=eout(n,1,ii,je+1)+dEner  ! gain
-                 kloop1: do kk=1,je
-                    if (ekev1.gt.gride1(kk-1).and.ekev1.le.gride1(kk)) then
-                       eout(n,1,ii,kk)=eout(n,1,ii,kk)+dEner
-                       exit kloop1
-                    endif
-                 enddo kloop1
+                 eout(n,1,ii,kk)=eout(n,1,ii,kk)+dEner
               else
                  eout(n,2,ii,je+1)=eout(n,2,ii,je+1)+dEner  ! loss
-                 kloop2: do kk=1,je
-                    if (ekev1.gt.gride1(kk-1).and.ekev1.le.gride1(kk)) then
-                        eout(n,2,ii,kk)=eout(n,2,ii,kk)+dEner
-                        exit kloop2
-                    endif
-                 enddo kloop2
+                 eout(n,2,ii,kk)=eout(n,2,ii,kk)+dEner
               endif       ! end of if (dPart.gt.0.)
         enddo          ! end of j loop
      enddo             ! end of do nn=1,nrun
@@ -4957,12 +5131,12 @@
      f2k(1:ir,1:ip,1:iw)=f2(n,1:ir,1:ip,1:iw,m)         ! initial f2
 
      ! find nrun 
-     do i=1,ir
-        i1=i-1
-        if (i1.lt.1) i1=1
-        do j=1,ip
-           j1=j-1
-           if (j1.lt.1) j1=ip
+     do j=1,ip
+        j1=j-1
+        if (j1.lt.1) j1=ip
+        do i=1,ir
+           i1=i-1
+           if (i1.lt.1) i1=1
            clp(i,j)=dtL*(abs(vlE(i1,j))+abs(vlE(i,j)))+ &
                     dtp*(abs(vpE(i,j1))+abs(vpE(i,j)))+ &
                     dtW*2.*abs(vlnp(i,j,m))
@@ -5004,8 +5178,8 @@
            fupLk(:,:,k)=fupL(:,:)
            fuppk(:,:,k)=fupp(:,:)
         enddo
-        do i=1,ir
-           do j=1,ip
+        do j=1,ip
+           do i=1,ir
               cww(0:iw)=cW(i,j)
               fww(1:iw)=f2k(i,j,1:iw)
               if (js(n).le.4) fww(0)=fww(1)        ! f2(0)=f2(1) for ion
@@ -5055,22 +5229,13 @@
               if (ib.gt.iba(j_1)) dPart=dPart+cp(ib,j_1)*fapk(ib,j_1,k)*d4(n)
               if (ib.gt.iba(j1)) dPart=dPart-cp(ib,j)*fapk(ib,j,k)*d4(n)
               dEner=ekev1*dPart
+              kk=(k+1)/2
               if (dPart.gt.0.) then
                  eout(n,1,ii,je+1)=eout(n,1,ii,je+1)+dEner  ! gain
-                 kloop1: do kk=1,je
-                    if (ekev1.gt.gride1(kk-1).and.ekev1.le.gride1(kk)) then
-                       eout(n,1,ii,kk)=eout(n,1,ii,kk)+dEner
-                       exit kloop1
-                    endif
-                 enddo kloop1
+                 eout(n,1,ii,kk)=eout(n,1,ii,kk)+dEner
               else
                  eout(n,2,ii,je+1)=eout(n,2,ii,je+1)+dEner   ! loss
-                 kloop2: do kk=1,je
-                    if (ekev1.gt.gride1(kk-1).and.ekev1.le.gride1(kk)) then
-                        eout(n,2,ii,kk)=eout(n,2,ii,kk)+dEner
-                        exit kloop2
-                    endif
-                 enddo kloop2
+                 eout(n,2,ii,kk)=eout(n,2,ii,kk)+dEner
               endif       ! end of if (dPart.gt.0.)
            enddo       ! end of k loop
         enddo          ! end of j loop
@@ -5233,9 +5398,9 @@
   use waveDiffCoef
   implicit none
 
-  integer i,j,m,k,n,L,ipc1,iph1,iLc1,iLh1,iexit,mpa,k1,k2
+  integer i,j,m,k,n,L,ipc1,iph1,iLc1,iLh1,iexit,mpa,k1,k2,jpa1
   real f2(ns,ir,ip,iw,ik),Cfactor(kLat),Upower0,Hfactor,cosa,pp3, &
-       Gjac(0:iw+1,0:ik+1),f2d(iw,ik),BLbo,Uq2k
+       Gjac(0:iw+1,0:ik+1),f2d(iw,ik),BLbo,Uq2k,wpa1,wpa2
   real G1d(0:iw+1),lnp1d(iw),lnpk,dq2du,Gjac1,Uq21d(iw),f2dlog,df1d(iw),df0
   real f1d(iw),f1dlog(iw),pq2(0:iw+1,0:ik+1),f2dq(iw,ik)
   real ompe1,ro1,rbo,ao,DDm,DDp,y_2,kak,dKda,dtU2,dtV2,Eq2,f2d0(iw,ik)
@@ -5255,7 +5420,7 @@
 !$omp parallel do default(shared) &
 !$omp private(j, i, ro1, ompe1, Cfactor, Hfactor, iexit, iLc1, BLbo, &
 !$omp         ipc1, mpa, wPA, wDaa, wDpp, wEq2, k, L, iLh1, iph1, rbo, &
-!$omp         m, y_2, cosa, dKda, kak, ao, Daa, Dpp, DUU, DVV, Uq2, Eq2, &
+!$omp         m, y_2, cosa, dKda, kak, ao, jpa1, wpa1, wpa2, Daa, Dpp, DUU, DVV, Uq2, Eq2, &
 !$omp         pq2, Gjac, f2d, DD, DDm, DDp, um, up, a1d, b1d, c1d, f0, &
 !$omp         fr, fnew, f2d0, f1d, f1dlog, Uq2k, f2dlog, G1d, k1, k2, &
 !$omp         dq2du, Gjac1, f2dq, Uq21d, df1d, lnpk, df0)
@@ -5326,14 +5491,19 @@
            ao=asin(y(i,j,m))*180./pi
            if (ao.lt.wPA(1)) ao=wPA(1)
            if (ao.gt.wPA(mpa)) ao=wPA(mpa)
+           call locate1(wPA(1:mpa),mpa,ao,jpa1)
+           if (jpa1.lt.1) jpa1=1
+           if (jpa1.ge.mpa) jpa1=mpa-1
+           wpa2=(ao-wPA(jpa1))/(wPA(jpa1+1)-wPA(jpa1))
+           wpa1=1.-wpa2
            do k=0,iw+1
-              call lintp(wPA(1:mpa),wDaa(1:mpa,k),mpa,ao,Daa)
-              call lintp(wPA(1:mpa),wDpp(1:mpa,k),mpa,ao,Dpp)
+              Daa=wDaa(jpa1,k)*wpa1 + wDaa(jpa1+1,k)*wpa2
+              Dpp=wDpp(jpa1,k)*wpa1 + wDpp(jpa1+1,k)*wpa2
               DUU(k,m)=Dpp
               DVV(k,m)=kak*kak*Daa
               Uq2(k,m)=lnp(n_e,k)
               if (iDap.eq.1) then
-                 call lintp(wPA(1:mpa),wEq2(1:mpa,k),mpa,ao,Eq2)       ! Eq2 in keV
+                 Eq2=wEq2(jpa1,k)*wpa1 + wEq2(jpa1+1,k)*wpa2       ! Eq2 in keV
                  if (Eq2.lt.0.) Eq2=0.
                  pq2(k,m)=sqrt(Eq2*(Eq2+2.*511.))*1.6e-16/EM_speed
                  Uq2(k,m)=log(pq2(k,m))    ! Uq2 in lnp
@@ -5996,8 +6166,7 @@ end subroutine diffuse_flc
       recursive subroutine locate1(xx,n,x,j)
 !--------------------------------------------------------------------------
 !  Routine return a value of j such that x is between xx(j) and xx(j+1).
-!  xx must be increasing or decreasing monotonically. If not, the locate will
-!  stop at the turning point.
+!  xx must be increasing or decreasing monotonically.
 !  If xx is increasing:
 !     If x=xx(m), j=m-1 so if x=xx(1), j=0  and if x=xx(n), j=n-1
 !     If x < xx(1), j=0  and if x > xx(n), j=n
@@ -6009,32 +6178,13 @@ end subroutine diffuse_flc
       integer,intent(in) :: n
       real,intent(in) :: xx(n),x
       integer,intent(out) :: j
-      integer nn,i,jl,ju,jm
-
-!  Make sure xx is increasing or decreasing monotonically
-      nn=n
-      monoCheck: do i=2,n
-         if (xx(n).gt.xx(1).and.xx(i).lt.xx(i-1)) then
-            nn=i-1
-            exit monoCheck
-         endif
-         if (xx(n).lt.xx(1).and.xx(i).gt.xx(i-1)) then
-            nn=i-1
-            exit monoCheck
-         endif
-      enddo monoCheck
-      if (nn.ne.n) then
-         write(*,*)'locate1: xx is not increasing or decreasing monotonically'
-         write(*,*)'n,x ',n,x
-         write(*,*)'xx ',xx
-         stop
-      endif
+      integer jl,ju,jm
 
       jl=0
-      ju=nn+1
+      ju=n+1
 10    if(ju-jl.gt.1)then
         jm=(ju+jl)/2
-        if((xx(nn).gt.xx(1)).eqv.(x.gt.xx(jm)))then
+        if((xx(n).gt.xx(1)).eqv.(x.gt.xx(jm)))then
           jl=jm
         else
           ju=jm
@@ -6104,9 +6254,9 @@ end subroutine diffuse_flc
       integer n,j,jl,ju,jm
       real xx(n),yy(n),x,x1,minxx,maxxx,y,d
 
-!  Make sure x is inside xx range
-      minxx=minval(xx)
-      maxxx=maxval(xx)
+!  Make sure x is inside xx range (O(1) endpoint check for monotonic xx)
+      minxx=min(xx(1),xx(n))
+      maxxx=max(xx(1),xx(n))
       x1=x
       if (x1.lt.minxx) x1=minxx 
       if (x1.gt.maxxx) x1=maxxx 
@@ -6157,8 +6307,8 @@ end subroutine diffuse_flc
         real x(nx),y(ny),v(nx,ny),x1,x2,y1,y2,v1,a,b,q00,q01,q10,q11
         real minx,maxx,miny,maxy
 
-        minx=minval(x)
-        maxx=maxval(x)
+        minx=min(x(1),x(nx))
+        maxx=max(x(1),x(nx))
         x2=x1
         if (x2.lt.minx) x2=minx      ! force x2 inside the x range
         if (x2.gt.maxx) x2=maxx      !
@@ -6169,8 +6319,8 @@ end subroutine diffuse_flc
         a=0.5
         if (x(i).ne.x(i1)) a=(x2-x(i))/(x(i1)-x(i))
 
-        miny=minval(y)
-        maxy=maxval(y)
+        miny=min(y(1),y(ny))
+        maxy=max(y(1),y(ny))
         y2=y1
         if (y2.lt.miny) y2=miny      ! force y2 inside the y range
         if (y2.gt.maxy) y2=maxy      !
@@ -6203,8 +6353,8 @@ end subroutine diffuse_flc
   real y(ny,nx),v(ny,nx)
   real x(nx),x1,x2,y1,y2,v1,y1d(ny),a,b,b1,q00,q01,q10,q11,minx,maxx,miny,maxy
 
-  minx=minval(x)
-  maxx=maxval(x)
+  minx=min(x(1),x(nx))
+  maxx=max(x(1),x(nx))
   x2=x1
   if (x2.lt.minx) x2=minx      ! force x2 inside the x range
   if (x2.gt.maxx) x2=maxx      !
@@ -6216,8 +6366,8 @@ end subroutine diffuse_flc
 
 ! y1d(1:ny)=y(i,1:ny)
   y1d(1:ny)=y(1:ny,i)
-  miny=minval(y1d)
-  maxy=maxval(y1d)
+  miny=min(y1d(1),y1d(ny))
+  maxy=max(y1d(1),y1d(ny))
   y2=y1
   if (y2.lt.miny) y2=miny      ! force y2 inside the y range
   if (y2.gt.maxy) y2=maxy      !
@@ -6470,9 +6620,18 @@ end subroutine diffuse_flc
   if (rad2.gt.tabular_rad(nr)) rad2=tabular_rad(nr)
 
 !!! angle calculations
-  cos_phi = -x / radxy
-  cos_theta = z / rad
-  if (season .eq. 'winter') cos_theta = -z / rad
+  if (radxy.gt.0.) then
+     cos_phi = min(1., max(-1., -x / radxy))
+  else
+     cos_phi = 1.
+  endif
+  if (rad.gt.0.) then
+     cos_theta = z / rad
+     if (season .eq. 'winter') cos_theta = -z / rad
+     cos_theta = min(1., max(-1., cos_theta))
+  else
+     cos_theta = 1.
+  endif
   phi_h=acos(cos_phi)
   theta=acos(cos_theta)
   if (y .lt. 0) phi_h = 2.*pi - phi_h
@@ -7037,6 +7196,7 @@ end subroutine hodges_Ylm
 
 ! Find volp, rp and ibp 
   do j=1,npp
+     ibp1=1
      do i=1,nlp   
         call lintp2(varLA,mphi1,volume1,ir,ip+1,varLp(i),mphip(j),volp(i,j))
         call lintp2(varLA,mphi1,ro1,ir,ip+1,varLp(i),mphip(j),rp(i,j))
@@ -7988,7 +8148,7 @@ end subroutine hodges_Ylm
   use constants
   use cimigrid_dim
   use cread1, only: rc,outname
-  use cread2, only: hlosscone,iyear,iday
+  use cread2, only: hlosscone,iyear,iday,rb
   implicit none
   external IGRF_GSW_08,zeroB
   integer,parameter :: itmax=40  ! max no. of iteration in finding zero dip
@@ -8031,7 +8191,7 @@ end subroutine hodges_Ylm
 
 ! Calculate xlat(1:nlg)
   xL1=1.08
-  xL2=13.
+  xL2=1.3*rb
   dL=(xL2-xL1)/(nlg-1)
   do n=1,nlg
      xL=xL1+(n-1)*dL
